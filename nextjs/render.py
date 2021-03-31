@@ -15,7 +15,7 @@ def render_nextjs_page(request: WSGIRequest, state: dict = None):
     )
     html = response.text
 
-    extra_head = render_to_string("qnext/extra_head.html")
+    extra_head = render_to_string("nextjs/extra_head.html")
     html = html.replace("</head>", extra_head + "</head>", 1)
 
     return HttpResponse(html)

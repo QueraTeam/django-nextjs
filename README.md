@@ -1,4 +1,4 @@
-# Django QNext
+# Django Next.js
 
 Next.js + Django integration
 
@@ -13,11 +13,11 @@ From a [comment on StackOverflow]:
 ## Installation
 
 1. Install the python package.
-2. Add `qnext` to `INSTALLED_APPS`. It must be before `django_js_reverse`.
+2. Add `nextjs` to `INSTALLED_APPS`. It must be before `django_js_reverse`.
 3. Add the following to the beginning of `urls.py`:
 
    ```python
-   path("", include("qnext.urls"))
+   path("", include("nextjs.urls"))
    ```
 
 ## Usage
@@ -32,7 +32,7 @@ Develop your pages in Next.js.
 Write a django URL and view for each page like this:
 
 ```python
-from qnext.render import render_nextjs_page
+from nextjs.render import render_nextjs_page
 
 def jobs(request):
     return render_nextjs_page(request)
@@ -48,7 +48,7 @@ that file should be in `public/next` subdirectory to work correctly.
 
 Default settings:
 
-    QNEXT_SETTINGS = {
+    NEXTJS_SETTINGS = {
         "nextjs_server_url": "http://127.0.0.1:3000",
         "nextjs_reverse_path": os.path.join(settings.BASE_DIR, "next/reverse"),
     }

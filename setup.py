@@ -8,13 +8,13 @@ with open(os.path.join(os.path.dirname(__file__), "README.md"), "r", encoding="U
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name="django-qnext",
+    name="django-nextjs",
     version="1.0.0",
     description="Next.js + Django integration",
     long_description=README,
     long_description_content_type="text/markdown",
     author="Mohammad Javad Naderi",
-    packages=find_packages(".", include=("qnext", "qnext.*")),
+    packages=find_packages(".", include=("nextjs", "nextjs.*")),
     include_package_data=True,
     install_requires=["Django>=3.1", "requests", "django_js_reverse"],
     classifiers=[

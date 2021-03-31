@@ -1,2 +1,2 @@
 include README.md
-recursive-include qnext/templates *
+recursive-include nextjs/templates *

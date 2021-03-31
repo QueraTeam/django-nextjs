@@ -1,0 +1,25 @@
+# https://editorconfig.org
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+max_line_length = 120
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+# Do not add "md" here! It breaks Markdown re-formatting in PyCharm.
+[*.{js,ts,jsx,tsx,json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+# Shorter lines in documentation files improves readability
+max_line_length = 80
+# 2 spaces at the end of a line forces a line break in MarkDown
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab

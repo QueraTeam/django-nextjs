@@ -50,7 +50,7 @@ Default settings:
 
     NEXTJS_SETTINGS = {
         "nextjs_server_url": "http://127.0.0.1:3000",
-        "nextjs_reverse_path": os.path.join(settings.BASE_DIR, "next/reverse"),
+        "nextjs_reverse_path": os.path.join(settings.BASE_DIR, "next", "reverse"),
     }
 
 ### `nextjs_server_url`

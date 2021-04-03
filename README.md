@@ -69,7 +69,7 @@ Start Next.js server:
 ```shell
 # Development:
 $ npm run dev
-# Production
+# Production:
 $ npm run build
 $ npm run start
 ```

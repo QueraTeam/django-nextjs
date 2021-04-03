@@ -1,8 +1,10 @@
 from django.urls import re_path
-from .views import NextJSProxy
+from django.conf import settings
+from .proxy import NextJSProxyView
 
 app_name = "nextjs"
-urlpatterns = [
-    re_path(r"^(?:next|__nextjs).*$", NextJSProxy.as_view(development_only=True)),  # only in dev environment
-    re_path(r"^_next/.*$", NextJSProxy.as_view()),  # both development and production
-]
+urlpatterns = []
+
+if settings.DEBUG:
+    # only in dev environment
+    urlpatterns.append(re_path(r"^(?:_next|__nextjs|next).*$", NextJSProxyView.as_view()))

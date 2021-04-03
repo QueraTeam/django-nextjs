@@ -16,7 +16,7 @@ setup(
     author="Mohammad Javad Naderi",
     packages=find_packages(".", include=("nextjs", "nextjs.*")),
     include_package_data=True,
-    install_requires=["Django>=3.1", "requests", "django_js_reverse"],
+    install_requires=["Django>=3.1", "requests", "aiohttp", "channels", "django_js_reverse"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",

@@ -1,0 +1,2 @@
+class NextJSImproperlyConfigured(Exception):
+    pass

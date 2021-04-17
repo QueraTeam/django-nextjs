@@ -29,7 +29,8 @@ async def render_nextjs_page_async(request: WSGIRequest) -> HttpResponse:
     page = request.path_info.lstrip("/")
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
-    async with aiohttp.ClientSession(headers={"cookie": request.META["HTTP_COOKIE"]}) as session:
+    headers = {"cookie": request.META["HTTP_COOKIE"]} if "HTTP_COOKIE" in request.META else None
+    async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params) as response:
             html = await response.text()
 

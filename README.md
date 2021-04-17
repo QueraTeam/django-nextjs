@@ -1,6 +1,6 @@
 # Django Next.js
 
-Next.js + Django integration
+Django + Next.js integration
 
 From a [comment on StackOverflow]:
 

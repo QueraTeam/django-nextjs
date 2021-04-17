@@ -1,5 +1,3 @@
-import json
-
 import aiohttp
 import requests
 from django.core.handlers.wsgi import WSGIRequest
@@ -15,22 +13,24 @@ def _nextjs_html_to_django_response(html: str):
     return HttpResponse(html)
 
 
-def render_nextjs_page_sync(request: WSGIRequest, state: dict = None) -> HttpResponse:
+def render_nextjs_page_sync(request: WSGIRequest) -> HttpResponse:
     page = request.path_info.lstrip("/")
+    params = {k: request.GET.getlist(k) for k in request.GET.keys()}
 
     response = requests.get(
-        f"{NEXTJS_SERVER_URL}/{page}", {"state": json.dumps(state or dict())}, cookies=request.COOKIES
+        f"{NEXTJS_SERVER_URL}/{page}", params=params, cookies=request.COOKIES
     )
     html = response.text
 
     return _nextjs_html_to_django_response(html)
 
 
-async def render_nextjs_page_async(request: WSGIRequest, state: dict = None) -> HttpResponse:
+async def render_nextjs_page_async(request: WSGIRequest) -> HttpResponse:
     page = request.path_info.lstrip("/")
+    params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
     async with aiohttp.ClientSession(headers={"cookie": request.META["HTTP_COOKIE"]}) as session:
-        async with session.get(f"{NEXTJS_SERVER_URL}/{page}") as response:
+        async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params) as response:
             html = await response.text()
 
     return _nextjs_html_to_django_response(html)

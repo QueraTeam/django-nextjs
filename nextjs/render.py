@@ -6,14 +6,14 @@ from django.template.loader import render_to_string
 from .app_settings import NEXTJS_SERVER_URL
 
 
-def _nextjs_html_to_django_response(html: str):
-    extra_head = render_to_string("nextjs/extra_head.html")
+def _nextjs_html_to_django_response(html: str, extra_head: str = ""):
+    extra_head = render_to_string("nextjs/extra_head.html") + extra_head
     html = html.replace("</head>", extra_head + "</head>", 1)
 
     return HttpResponse(html)
 
 
-def render_nextjs_page_sync(request: WSGIRequest) -> HttpResponse:
+def render_nextjs_page_sync(request: WSGIRequest, extra_head: str = "") -> HttpResponse:
     page = request.path_info.lstrip("/")
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
 
@@ -22,10 +22,10 @@ def render_nextjs_page_sync(request: WSGIRequest) -> HttpResponse:
     )
     html = response.text
 
-    return _nextjs_html_to_django_response(html)
+    return _nextjs_html_to_django_response(html, extra_head)
 
 
-async def render_nextjs_page_async(request: WSGIRequest) -> HttpResponse:
+async def render_nextjs_page_async(request: WSGIRequest, extra_head: str = "") -> HttpResponse:
     page = request.path_info.lstrip("/")
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
@@ -34,4 +34,4 @@ async def render_nextjs_page_async(request: WSGIRequest) -> HttpResponse:
         async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params) as response:
             html = await response.text()
 
-    return _nextjs_html_to_django_response(html)
+    return _nextjs_html_to_django_response(html, extra_head)

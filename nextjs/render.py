@@ -1,8 +1,11 @@
 import aiohttp
 import requests
+from django.conf import settings
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponse
+from django.middleware.csrf import get_token as get_csrf_token
 from django.template.loader import render_to_string
+
 from .app_settings import NEXTJS_SERVER_URL
 
 
@@ -29,8 +32,17 @@ async def render_nextjs_page_async(request: WSGIRequest, extra_head: str = "") -
     page = request.path_info.lstrip("/")
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
-    headers = {"cookie": request.META["HTTP_COOKIE"]} if "HTTP_COOKIE" in request.META else None
-    async with aiohttp.ClientSession(headers=headers) as session:
+    # Ensure we always send a CSRF cookie to Next.js server (if there is none in `request` object, generate one)
+    # Reason: We are going to issue GraphQL POST requests to fetch data in NextJS getServerSideProps.
+    #         If this is the first request of user, there is no CSRF cookie and request fails,
+    #         since GraphQL uses POST even for data fetching.
+    # Isn't this a vulnerability?
+    # No, as long as getServerSideProps functions are side effect free
+    # (i.e. dont use HTTP unsafe methods or GraphQL mutations).
+    # https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability
+    cookies = request.COOKIES | {settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
+
+    async with aiohttp.ClientSession(cookies=cookies) as session:
         async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params) as response:
             html = await response.text()
 

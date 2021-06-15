@@ -79,18 +79,22 @@ Write a django URL and view for each page like this:
 
 ```python
 # If you're using django channels
+from django.http import HttpResponse
 from nextjs.render import render_nextjs_page_async
 
 async def jobs(request):
-    return await render_nextjs_page_async(request)
+    html = await render_nextjs_page_async(request)
+    return HttpResponse(html)
 ```
 
 ```python
 # If you're not using django channels
+from django.http import HttpResponse
 from nextjs.render import render_nextjs_page_sync
 
 def jobs(request):
-    return render_nextjs_page_sync(request)
+    html = render_nextjs_page_sync(request)
+    return HttpResponse(html)
 ```
 
 ## Notes

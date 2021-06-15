@@ -13,7 +13,7 @@ def _nextjs_html_to_django_response(html: str, extra_head: str = ""):
     extra_head = render_to_string("nextjs/extra_head.html") + extra_head
     html = html.replace("</head>", extra_head + "</head>", 1)
 
-    return HttpResponse(html)
+    return html
 
 
 def render_nextjs_page_sync(request: WSGIRequest, extra_head: str = "") -> HttpResponse:

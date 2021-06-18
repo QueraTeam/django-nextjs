@@ -1,22 +1,20 @@
 import aiohttp
 import requests
 from django.conf import settings
-from django.core.handlers.wsgi import WSGIRequest
-from django.http import HttpResponse
+from django.http import HttpRequest
 from django.middleware.csrf import get_token as get_csrf_token
 from django.template.loader import render_to_string
 
 from .app_settings import NEXTJS_SERVER_URL
 
 
-def _nextjs_html_to_django_response(html: str, extra_head: str = ""):
+def _nextjs_html_to_django_response(html: str, extra_head: str = "") -> str:
     extra_head = render_to_string("nextjs/extra_head.html") + extra_head
     html = html.replace("</head>", extra_head + "</head>", 1)
-
     return html
 
 
-def render_nextjs_page_sync(request: WSGIRequest, extra_head: str = "") -> HttpResponse:
+def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "") -> str:
     page = request.path_info.lstrip("/")
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
 
@@ -28,7 +26,7 @@ def render_nextjs_page_sync(request: WSGIRequest, extra_head: str = "") -> HttpR
     return _nextjs_html_to_django_response(html, extra_head)
 
 
-async def render_nextjs_page_async(request: WSGIRequest, extra_head: str = "") -> HttpResponse:
+async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "") -> str:
     page = request.path_info.lstrip("/")
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 

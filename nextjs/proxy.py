@@ -20,10 +20,7 @@ class NextJSProxyConsumer(AsyncHttpConsumer):
         if not settings.DEBUG:
             raise NextJSImproperlyConfigured("This proxy is for development only.")
         url = NEXTJS_SERVER_URL + self.scope["path"] + "?" + self.scope["query_string"].decode()
-        original_headers = {k.decode(): v.decode() for k, v in self.scope["headers"]}
-        headers = {}
-        if "cookie" in original_headers:
-            headers["cookie"] = original_headers["cookie"]
+        headers = {k.decode(): v.decode() for k, v in self.scope["headers"]}
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url) as response:
                 await self.send_headers(

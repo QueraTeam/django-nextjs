@@ -41,7 +41,7 @@ def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "") -> str:
 
 
 async def _nextjs_html_to_django_response_async(request: HttpRequest, html: str, extra_head: str = "") -> str:
-    append_head = render_to_string("nextjs/append_head.html") + extra_head
+    append_head = (await sync_to_async(render_to_string)("nextjs/append_head.html", request=request)) + extra_head
     prepend_body = await sync_to_async(render_to_string)("nextjs/prepend_body.html", request=request)
     html = html.replace("</head>", append_head + "</head>", 1).replace(
         """<div id="__next">""", f"""{prepend_body}<div id="__next">""", 1

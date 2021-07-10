@@ -21,8 +21,11 @@ def _get_cookies(request):
 
 
 def _nextjs_html_to_django_response(html: str, extra_head: str = "") -> str:
-    extra_head = render_to_string("nextjs/extra_head.html") + extra_head
-    html = html.replace("</head>", extra_head + "</head>", 1)
+    append_head = render_to_string("nextjs/append_head.html") + extra_head
+    prepend_body = render_to_string("nextjs/prepend_body.html")
+    html = html.replace("</head>", append_head + "</head>", 1).replace(
+        """<div id="__next">""", f"""{prepend_body}<div id="__next">""", 1
+    )
     return html
 
 

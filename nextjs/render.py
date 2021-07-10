@@ -1,5 +1,6 @@
 import aiohttp
 import requests
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.http import HttpRequest
 from django.middleware.csrf import get_token as get_csrf_token
@@ -20,9 +21,9 @@ def _get_cookies(request):
     return request.COOKIES | {settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
 
 
-def _nextjs_html_to_django_response(html: str, extra_head: str = "") -> str:
+def _nextjs_html_to_django_response_sync(request: HttpRequest, html: str, extra_head: str = "") -> str:
     append_head = render_to_string("nextjs/append_head.html") + extra_head
-    prepend_body = render_to_string("nextjs/prepend_body.html")
+    prepend_body = render_to_string("nextjs/prepend_body.html", request=request)
     html = html.replace("</head>", append_head + "</head>", 1).replace(
         """<div id="__next">""", f"""{prepend_body}<div id="__next">""", 1
     )
@@ -36,7 +37,16 @@ def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "") -> str:
     response = requests.get(f"{NEXTJS_SERVER_URL}/{page}", params=params, cookies=_get_cookies(request))
     html = response.text
 
-    return _nextjs_html_to_django_response(html, extra_head)
+    return _nextjs_html_to_django_response_sync(request, html, extra_head)
+
+
+async def _nextjs_html_to_django_response_async(request: HttpRequest, html: str, extra_head: str = "") -> str:
+    append_head = render_to_string("nextjs/append_head.html") + extra_head
+    prepend_body = await sync_to_async(render_to_string)("nextjs/prepend_body.html", request=request)
+    html = html.replace("</head>", append_head + "</head>", 1).replace(
+        """<div id="__next">""", f"""{prepend_body}<div id="__next">""", 1
+    )
+    return html
 
 
 async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "") -> str:
@@ -47,4 +57,4 @@ async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "") -
         async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params) as response:
             html = await response.text()
 
-    return _nextjs_html_to_django_response(html, extra_head)
+    return await _nextjs_html_to_django_response_async(request, html, extra_head)

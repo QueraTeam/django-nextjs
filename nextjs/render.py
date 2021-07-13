@@ -34,7 +34,12 @@ def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "") -> str:
     page = request.path_info.lstrip("/")
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
 
-    response = requests.get(f"{NEXTJS_SERVER_URL}/{page}", params=params, cookies=_get_cookies(request))
+    response = requests.get(
+        f"{NEXTJS_SERVER_URL}/{page}",
+        params=params,
+        cookies=_get_cookies(request),
+        headers={"user-agent": request.META.get("HTTP_USER_AGENT", "")},
+    )
     html = response.text
 
     return _nextjs_html_to_django_response_sync(request, html, extra_head)
@@ -53,7 +58,10 @@ async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "") -
     page = request.path_info.lstrip("/")
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
-    async with aiohttp.ClientSession(cookies=_get_cookies(request)) as session:
+    async with aiohttp.ClientSession(
+        cookies=_get_cookies(request),
+        headers={"user-agent": request.META.get("HTTP_USER_AGENT", "")}
+    ) as session:
         async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params) as response:
             html = await response.text()
 

@@ -22,11 +22,12 @@ def _get_cookies(request):
 
 
 def _nextjs_html_to_django_response_sync(request: HttpRequest, html: str, extra_head: str = "") -> str:
-    append_head = render_to_string("nextjs/append_head.html") + extra_head
-    prepend_body = render_to_string("nextjs/prepend_body.html", request=request)
-    html = html.replace("</head>", append_head + "</head>", 1).replace(
-        """<div id="__next">""", f"""{prepend_body}<div id="__next">""", 1
-    )
+    head_append = render_to_string("nextjs/head_append.html") + extra_head
+    body_prepend = render_to_string("nextjs/body_prepend.html", request=request)
+    body_append = render_to_string("nextjs/body_append.html", request=request)
+    html = html.replace("</head>", head_append + "</head>", 1).replace(
+        """<div id="__next">""", f"""{body_prepend}<div id="__next">""", 1
+    ).replace("</body>", body_append + "</body>", 1)
     return html
 
 
@@ -46,11 +47,12 @@ def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "") -> str:
 
 
 async def _nextjs_html_to_django_response_async(request: HttpRequest, html: str, extra_head: str = "") -> str:
-    append_head = (await sync_to_async(render_to_string)("nextjs/append_head.html", request=request)) + extra_head
-    prepend_body = await sync_to_async(render_to_string)("nextjs/prepend_body.html", request=request)
-    html = html.replace("</head>", append_head + "</head>", 1).replace(
-        """<div id="__next">""", f"""{prepend_body}<div id="__next">""", 1
-    )
+    head_append = (await sync_to_async(render_to_string)("nextjs/head_append.html", request=request)) + extra_head
+    body_prepend = await sync_to_async(render_to_string)("nextjs/body_prepend.html", request=request)
+    body_append = await sync_to_async(render_to_string)("nextjs/body_append.html", request=request)
+    html = html.replace("</head>", head_append + "</head>", 1).replace(
+        """<div id="__next">""", f"""{body_prepend}<div id="__next">""", 1
+    ).replace("</body>", body_append + "</body>", 1)
     return html
 
 

@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name="django-nextjs",
-    version="1.5.0",
+    version="1.6.0",
     description="Next.js + Django integration",
     long_description=README,
     long_description_content_type="text/markdown",

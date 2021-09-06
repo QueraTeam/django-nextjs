@@ -21,17 +21,17 @@ def _get_cookies(request):
     return request.COOKIES | {settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
 
 
-def _nextjs_html_to_django_response_sync(request: HttpRequest, html: str, extra_head: str = "") -> str:
-    head_append = render_to_string("nextjs/head_append.html") + extra_head
-    body_prepend = render_to_string("nextjs/body_prepend.html", request=request)
-    body_append = render_to_string("nextjs/body_append.html", request=request)
+def _nextjs_html_to_django_response_sync(request: HttpRequest, html: str, extra_head: str = "", context=None) -> str:
+    head_append = render_to_string("nextjs/head_append.html", context=context, request=request) + extra_head
+    body_prepend = render_to_string("nextjs/body_prepend.html", context=context, request=request)
+    body_append = render_to_string("nextjs/body_append.html", context=context, request=request)
     html = html.replace("</head>", head_append + "</head>", 1).replace(
         """<div id="__next">""", f"""{body_prepend}<div id="__next">""", 1
     ).replace("</body>", body_append + "</body>", 1)
     return html
 
 
-def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "") -> str:
+def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "", context=None) -> str:
     page = request.path_info.lstrip("/")
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
 
@@ -43,20 +43,20 @@ def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "") -> str:
     )
     html = response.text
 
-    return _nextjs_html_to_django_response_sync(request, html, extra_head)
+    return _nextjs_html_to_django_response_sync(request, html, extra_head, context)
 
 
-async def _nextjs_html_to_django_response_async(request: HttpRequest, html: str, extra_head: str = "") -> str:
-    head_append = (await sync_to_async(render_to_string)("nextjs/head_append.html", request=request)) + extra_head
-    body_prepend = await sync_to_async(render_to_string)("nextjs/body_prepend.html", request=request)
-    body_append = await sync_to_async(render_to_string)("nextjs/body_append.html", request=request)
+async def _nextjs_html_to_django_response_async(request: HttpRequest, html: str, extra_head: str = "", context=None) -> str:
+    head_append = (await sync_to_async(render_to_string)("nextjs/head_append.html", context=context, request=request)) + extra_head
+    body_prepend = await sync_to_async(render_to_string)("nextjs/body_prepend.html", context=context, request=request)
+    body_append = await sync_to_async(render_to_string)("nextjs/body_append.html", context=context, request=request)
     html = html.replace("</head>", head_append + "</head>", 1).replace(
         """<div id="__next">""", f"""{body_prepend}<div id="__next">""", 1
     ).replace("</body>", body_append + "</body>", 1)
     return html
 
 
-async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "") -> str:
+async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "", context=None) -> str:
     page = request.path_info.lstrip("/")
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
@@ -67,4 +67,4 @@ async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "") -
         async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params) as response:
             html = await response.text()
 
-    return await _nextjs_html_to_django_response_async(request, html, extra_head)
+    return await _nextjs_html_to_django_response_async(request, html, extra_head, context)

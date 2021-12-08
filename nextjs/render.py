@@ -32,7 +32,7 @@ def _nextjs_html_to_django_response_sync(request: HttpRequest, html: str, extra_
 
 
 def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "", context=None) -> str:
-    page = request.path_info.lstrip("/")
+    page = requests.utils.quote(request.path_info.lstrip("/"))
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
 
     response = requests.get(
@@ -57,7 +57,7 @@ async def _nextjs_html_to_django_response_async(request: HttpRequest, html: str,
 
 
 async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "", context=None) -> str:
-    page = request.path_info.lstrip("/")
+    page = requests.utils.quote(request.path_info.lstrip("/"))
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
     async with aiohttp.ClientSession(

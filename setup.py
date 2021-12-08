@@ -14,7 +14,7 @@ dev_requirements = [
 
 setup(
     name="django-nextjs",
-    version="1.7.0",
+    version="1.7.1",
     description="Next.js + Django integration",
     long_description=README,
     long_description_content_type="text/markdown",

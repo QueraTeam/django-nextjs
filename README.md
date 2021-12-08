@@ -21,22 +21,22 @@ From a [comment on StackOverflow]:
 
     ```python
     import os
-    
+
     from django.core.asgi import get_asgi_application
     from django.urls import re_path
-    
+
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
     django_asgi_app = get_asgi_application()
-    
+
     from channels.routing import ProtocolTypeRouter, URLRouter
     from nextjs.proxy import NextJSProxyConsumer
-    
+
     from django.conf import settings
-    
+
     http_routes = [re_path(r"", django_asgi_app)]
     if settings.DEBUG:
         http_routes.insert(0, re_path(r"^(?:_next|__next|next).*", NextJSProxyConsumer.as_asgi()))
-    
+
     application = ProtocolTypeRouter(
         {
             # Django's ASGI application to handle traditional HTTP requests
@@ -58,7 +58,7 @@ From a [comment on StackOverflow]:
 
     | URL | Action |
     |-----|--------|
-    | `/_next/static/...` | Serve `NEXTJS_PATH/.next/static` directory | 
+    | `/_next/static/...` | Serve `NEXTJS_PATH/.next/static` directory |
     | `/_next/...` | Proxy to  `http://localhost:3000` |
     | `/next/...` | Serve `NEXTJS_PATH/public/next` directory |
 
@@ -122,6 +122,10 @@ The URL of Next.js server (started by `npm run dev` or `npm run start`)
 
 Path to a directory where generated `reverse.json` file is saved.
 
+## Development
+
+- Install development dependencies in your virtualenv with `pip install -e '.[dev]'`
+- Install pre-commit hooks using `pre-commit install`.
 
 ## References
 

@@ -1,0 +1,26 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace # trims trailing whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer # ensures that a file is either empty, or ends with one newline
+      - id: check-yaml # checks syntax of yaml files
+      - id: check-json # checks syntax of json files
+      - id: check-added-large-files # prevent giant files from being committed
+      - id: fix-encoding-pragma # removes "# -*- coding: utf-8 -*-" from python files (since we only support python 3)
+        args: [--remove]
+      - id: check-merge-conflict # check for files that contain merge conflict strings
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        name: isort (python)
+
+  - repo: https://github.com/psf/black
+    rev: 21.11b1
+    hooks:
+      - id: black

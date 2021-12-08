@@ -16,6 +16,7 @@ class NextJSProxyConsumer(AsyncHttpConsumer):
     - This is an async consumer for django channels.
     - Supports streaming response.
     """
+
     async def handle(self, body):
         if not settings.DEBUG:
             raise NextJSImproperlyConfigured("This proxy is for development only.")

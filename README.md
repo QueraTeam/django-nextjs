@@ -62,6 +62,16 @@ From a [comment on StackOverflow]:
     | `/_next/...` | Proxy to  `http://localhost:3000` |
     | `/next/...` | Serve `NEXTJS_PATH/public/next` directory |
 
+    Pass `x-real-ip` header when proxying `/_next/`:
+
+    ```
+    location /_next/ {
+        proxy_set_header  x-real-ip $remote_addr;
+        proxy_pass  http://127.0.0.1:3000;
+    }
+    ```
+
+
 ## Usage
 
 Start Next.js server:

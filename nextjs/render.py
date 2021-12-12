@@ -21,6 +21,13 @@ def _get_cookies(request):
     return request.COOKIES | {settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
 
 
+def _get_headers(request):
+    return {
+        "x-real-ip": request.META.get("HTTP_X_REAL_IP", "") or request.META.get("REMOTE_ADDR", ""),
+        "user-agent": request.META.get("HTTP_USER_AGENT", ""),
+    }
+
+
 def _nextjs_html_to_django_response_sync(request: HttpRequest, html: str, extra_head: str = "", context=None) -> str:
     head_append = render_to_string("nextjs/head_append.html", context=context, request=request) + extra_head
     body_prepend = render_to_string("nextjs/body_prepend.html", context=context, request=request)
@@ -41,7 +48,7 @@ def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "", context=
         f"{NEXTJS_SERVER_URL}/{page}",
         params=params,
         cookies=_get_cookies(request),
-        headers={"user-agent": request.META.get("HTTP_USER_AGENT", "")},
+        headers=_get_headers(request),
     )
     html = response.text
 
@@ -69,7 +76,8 @@ async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "", c
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
     async with aiohttp.ClientSession(
-        cookies=_get_cookies(request), headers={"user-agent": request.META.get("HTTP_USER_AGENT", "")}
+        cookies=_get_cookies(request),
+        headers=_get_headers(request),
     ) as session:
         async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params) as response:
             html = await response.text()

@@ -9,6 +9,23 @@ from django.template.loader import render_to_string
 from .app_settings import NEXTJS_SERVER_URL
 
 
+def _extend_html(
+    html: str,
+    head_append: str,
+    body_prepend: str,
+    body_append: str,
+) -> str:
+    """extend html with append and prepend to head and body tags"""
+
+    # str.replace is preferred over re.sub for performance reasons
+    html = (
+        html.replace("</head>", head_append + "</head>", 1)
+        .replace('<div id="__next"', body_prepend + '<div id="__next"', 1)
+        .replace("</body>", body_append + "</body>", 1)
+    )
+    return html
+
+
 def _get_cookies(request):
     # Ensure we always send a CSRF cookie to Next.js server (if there is none in `request` object, generate one)
     # Reason: We are going to issue GraphQL POST requests to fetch data in NextJS getServerSideProps.
@@ -32,12 +49,8 @@ def _nextjs_html_to_django_response_sync(request: HttpRequest, html: str, extra_
     head_append = render_to_string("nextjs/head_append.html", context=context, request=request) + extra_head
     body_prepend = render_to_string("nextjs/body_prepend.html", context=context, request=request)
     body_append = render_to_string("nextjs/body_append.html", context=context, request=request)
-    html = (
-        html.replace("</head>", head_append + "</head>", 1)
-        .replace("""<div id="__next">""", f"""{body_prepend}<div id="__next">""", 1)
-        .replace("</body>", body_append + "</body>", 1)
-    )
-    return html
+
+    return _extend_html(html, head_append, body_prepend, body_append)
 
 
 def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "", context=None) -> str:
@@ -63,12 +76,8 @@ async def _nextjs_html_to_django_response_async(
     ) + extra_head
     body_prepend = await sync_to_async(render_to_string)("nextjs/body_prepend.html", context=context, request=request)
     body_append = await sync_to_async(render_to_string)("nextjs/body_append.html", context=context, request=request)
-    html = (
-        html.replace("</head>", head_append + "</head>", 1)
-        .replace("""<div id="__next">""", f"""{body_prepend}<div id="__next">""", 1)
-        .replace("</body>", body_append + "</body>", 1)
-    )
-    return html
+
+    return _extend_html(html, head_append, body_prepend, body_append)
 
 
 async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "", context=None) -> str:

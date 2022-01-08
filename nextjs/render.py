@@ -2,39 +2,46 @@ import aiohttp
 import requests
 from asgiref.sync import sync_to_async
 from django.conf import settings
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.middleware.csrf import get_token as get_csrf_token
 from django.template.loader import render_to_string
 
 from .app_settings import NEXTJS_SERVER_URL
 
 
-def _extend_html(
-    html: str,
-    head_append: str,
-    body_prepend: str,
-    body_append: str,
-) -> str:
-    """extend html with append and prepend to head and body tags"""
+def _get_context(html: str, context: dict = None) -> dict:
+    if (a := html.find("<head>")) == -1:
+        return None
+    if (b := html.find('</head><body id="__django_nextjs_body"', a)) == -1:
+        return None
+    if (c := html.find('<div id="__django_nextjs_body_begin"', b)) == -1:
+        return None
+    if (d := html.find('<div id="__django_nextjs_body_end"', c)) == -1:
+        return None
 
-    # str.replace is preferred over re.sub for performance reasons
-    html = (
-        html.replace("</head>", head_append + "</head>", 1)
-        .replace('<div id="__next"', body_prepend + '<div id="__next"', 1)
-        .replace("</body>", body_append + "</body>", 1)
-    )
-    return html
+    context = context or {}
+    context["django_nextjs__"] = {
+        "section1": html[: a + len("<head>")],
+        "section2": html[a + len("<head>") : b],
+        "section3": html[b:c],
+        "section4": html[c:d],
+        "section5": html[d:],
+    }
+
+    return context
 
 
 def _get_cookies(request):
-    # Ensure we always send a CSRF cookie to Next.js server (if there is none in `request` object, generate one)
-    # Reason: We are going to issue GraphQL POST requests to fetch data in NextJS getServerSideProps.
-    #         If this is the first request of user, there is no CSRF cookie and request fails,
-    #         since GraphQL uses POST even for data fetching.
-    # Isn't this a vulnerability?
-    # No, as long as getServerSideProps functions are side effect free
-    # (i.e. dont use HTTP unsafe methods or GraphQL mutations).
-    # https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability
+    """
+    Ensure we always send a CSRF cookie to Next.js server (if there is none in `request` object, generate one)
+    Reason: We are going to issue GraphQL POST requests to fetch data in NextJS getServerSideProps.
+            If this is the first request of user, there is no CSRF cookie and request fails,
+            since GraphQL uses POST even for data fetching.
+    Isn't this a vulnerability?
+    No, as long as getServerSideProps functions are side effect free
+    (i.e. dont use HTTP unsafe methods or GraphQL mutations).
+    https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability
+    """
     return request.COOKIES | {settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
 
 
@@ -45,18 +52,11 @@ def _get_headers(request):
     }
 
 
-def _nextjs_html_to_django_response_sync(request: HttpRequest, html: str, extra_head: str = "", context=None) -> str:
-    head_append = render_to_string("nextjs/head_append.html", context=context, request=request) + extra_head
-    body_prepend = render_to_string("nextjs/body_prepend.html", context=context, request=request)
-    body_append = render_to_string("nextjs/body_append.html", context=context, request=request)
-
-    return _extend_html(html, head_append, body_prepend, body_append)
-
-
-def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "", context=None) -> str:
+def render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str = "", context=None, using=None) -> str:
     page = requests.utils.quote(request.path_info.lstrip("/"))
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
 
+    # Get HTML from Next.js server
     response = requests.get(
         f"{NEXTJS_SERVER_URL}/{page}",
         params=params,
@@ -65,25 +65,28 @@ def render_nextjs_page_sync(request: HttpRequest, extra_head: str = "", context=
     )
     html = response.text
 
-    return _nextjs_html_to_django_response_sync(request, html, extra_head, context)
+    # Apply template_name if provided
+    if template_name and (final_context := _get_context(html, context)) is not None:
+        return render_to_string(template_name, context=final_context, request=request, using=using)
+
+    # If no template_name, return original HTML
+    return html
 
 
-async def _nextjs_html_to_django_response_async(
-    request: HttpRequest, html: str, extra_head: str = "", context=None
+def render_nextjs_page_sync(
+    request: HttpRequest, template_name: str = "", context=None, content_type=None, status=None, using=None
 ) -> str:
-    head_append = (
-        await sync_to_async(render_to_string)("nextjs/head_append.html", context=context, request=request)
-    ) + extra_head
-    body_prepend = await sync_to_async(render_to_string)("nextjs/body_prepend.html", context=context, request=request)
-    body_append = await sync_to_async(render_to_string)("nextjs/body_append.html", context=context, request=request)
-
-    return _extend_html(html, head_append, body_prepend, body_append)
+    content = render_nextjs_page_to_string_sync(request, template_name, context, using=using)
+    return HttpResponse(content, content_type, status)
 
 
-async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "", context=None) -> str:
+async def render_nextjs_page_to_string_async(
+    request: HttpRequest, template_name: str = "", context=None, using=None
+) -> str:
     page = requests.utils.quote(request.path_info.lstrip("/"))
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
+    # Get HTML from Next.js server
     async with aiohttp.ClientSession(
         cookies=_get_cookies(request),
         headers=_get_headers(request),
@@ -91,4 +94,16 @@ async def render_nextjs_page_async(request: HttpRequest, extra_head: str = "", c
         async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params) as response:
             html = await response.text()
 
-    return await _nextjs_html_to_django_response_async(request, html, extra_head, context)
+    # Apply template_name if provided
+    if template_name and (final_context := _get_context(html, context)) is not None:
+        return await sync_to_async(render_to_string)(template_name, context=final_context, request=request, using=using)
+
+    # If no template_name, return original HTML
+    return html
+
+
+async def render_nextjs_page_async(
+    request: HttpRequest, template_name: str = "", context=None, content_type=None, status=None, using=None
+) -> str:
+    content = await render_nextjs_page_to_string_async(request, template_name, context, using=using)
+    return HttpResponse(content, content_type, status)

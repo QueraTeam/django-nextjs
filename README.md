@@ -138,10 +138,10 @@ class MyDocument extends Document {
 export default MyDocument;
 ```
 
-Write a django template that extends `nextjs/document.html`:
+Write a django template that extends `nextjs/document_base.html`:
 
 ```django
-{% extends "nextjs/document.html" %}
+{% extends "nextjs/document_base.html" %}
 
 
 {% block head %}

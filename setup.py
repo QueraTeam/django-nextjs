@@ -14,14 +14,14 @@ dev_requirements = [
 
 setup(
     name="django-nextjs",
-    version="2.0.1",
+    version="2.1.0",
     description="Next.js + Django integration",
     long_description=README,
     long_description_content_type="text/markdown",
     author="Mohammad Javad Naderi",
     packages=find_packages(".", include=("nextjs", "nextjs.*")),
     include_package_data=True,
-    install_requires=["Django>=3.1", "requests", "aiohttp", "channels", "django_js_reverse"],
+    install_requires=["Django>=3.1", "requests", "aiohttp", "channels", "websockets>=10.1", "django_js_reverse"],
     extras_require={"dev": dev_requirements},
     classifiers=[
         "Development Status :: 5 - Production/Stable",

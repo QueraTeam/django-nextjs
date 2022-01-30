@@ -1,6 +1,11 @@
+import asyncio
+import re
+
 import aiohttp
 import requests
+import websockets
 from channels.generic.http import AsyncHttpConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
 from django import http
 from django.conf import settings
 from django.views import View
@@ -9,7 +14,7 @@ from nextjs.app_settings import NEXTJS_SERVER_URL
 from nextjs.exceptions import NextJSImproperlyConfigured
 
 
-class NextJSProxyConsumer(AsyncHttpConsumer):
+class NextJSProxyHttpConsumer(AsyncHttpConsumer):
     """
     Proxies /next..., /_next..., /__nextjs... requests to Next.js server in development environment.
 
@@ -32,6 +37,39 @@ class NextJSProxyConsumer(AsyncHttpConsumer):
                 async for data in response.content.iter_any():
                     await self.send_body(data, more_body=True)
                 await self.send_body(b"", more_body=False)
+
+
+class NextJSProxyWebsocketConsumer(AsyncWebsocketConsumer):
+    """
+    Proxies websocket requests to Next.js server in development environment.
+
+    - This is an async consumer for django channels.
+    - Use this for nextjs 12 and above to activate webpack hmr.
+    """
+
+    async def connect_to_nextjs_server(self):
+        url = "ws://" + re.match(r".+://(.+:\d+)", NEXTJS_SERVER_URL).group(1) + self.scope["path"]
+        self.websocket_nextjs = await websockets.connect(url)
+
+    async def connect(self):
+        await self.connect_to_nextjs_server()
+        await self.accept()
+
+        async def receive_from_nextjs_server():
+            async for message in self.websocket_nextjs:
+                await self.send(message)
+
+        asyncio.ensure_future(receive_from_nextjs_server())
+
+    async def receive(self, text_data=None, bytes_data=None):
+        """received message from browser"""
+        try:
+            await self.websocket_nextjs.send(text_data)
+        except websockets.ConnectionClosed:
+            await self.connect_to_nextjs_server()
+
+    async def close(self, code=None):
+        await self.websocket_nextjs.close()
 
 
 class NextJSProxyView(View):

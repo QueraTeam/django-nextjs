@@ -1,5 +1,10 @@
 # Django Next.js
 
+[![](https://img.shields.io/pypi/v/django-nextjs.svg)](https://pypi.python.org/pypi/django-nextjs/)
+[![](https://github.com/QueraTeam/django-nextjs/workflows/Tests/badge.svg)](https://github.com/QueraTeam/django-nextjs/actions)
+[![](https://img.shields.io/github/license/QueraTeam/django-nextjs.svg)](https://github.com/QueraTeam/django-nextjs/blob/master/LICENSE)
+[![](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 Django + Next.js integration
 
 From a [comment on StackOverflow]:
@@ -13,11 +18,11 @@ From a [comment on StackOverflow]:
 ## Installation
 
 - Install the python package.
-- Add `nextjs` to `INSTALLED_APPS`. It must be before `django_js_reverse`.
+- Add `django_nextjs` to `INSTALLED_APPS`. It must be before `django_js_reverse`.
 
 - **In Development Environment:**
 
-  - If you're using django channels, add `NextJSProxyConsumer` to `asgi.py`:
+  - If you're using django channels, add `NextJSProxyHttpConsumer` and `NextJSProxyWebsocketConsumer` to `asgi.py`:
 
     ```python
     import os
@@ -28,19 +33,24 @@ From a [comment on StackOverflow]:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
     django_asgi_app = get_asgi_application()
 
+    from channels.auth import AuthMiddlewareStack
     from channels.routing import ProtocolTypeRouter, URLRouter
-    from nextjs.proxy import NextJSProxyConsumer
+    from django_nextjs.proxy import NextJSProxyHttpConsumer, NextJSProxyWebsocketConsumer
 
     from django.conf import settings
 
-    http_routes = [re_path(r"", django_asgi_app)]
+    http_routes = [...]
+    websocket_routers = [...]
     if settings.DEBUG:
-        http_routes.insert(0, re_path(r"^(?:_next|__next|next).*", NextJSProxyConsumer.as_asgi()))
+        http_routes.insert(0, re_path(r"^(?:_next|__next|next).*", NextJSProxyHttpConsumer.as_asgi()))
+        websocket_routers.insert(0, path("_next/webpack-hmr", NextJSProxyWebsocketConsumer.as_asgi()))
+
 
     application = ProtocolTypeRouter(
         {
-            # Django's ASGI application to handle traditional HTTP requests
+            # Django's ASGI application to handle traditional HTTP and websocket requests.
             "http": URLRouter(http_routes),
+            "websocket": AuthMiddlewareStack(URLRouter(websocket_routers)),
             # ...
         }
     )
@@ -49,7 +59,7 @@ From a [comment on StackOverflow]:
   - Otherwise, add the following to the beginning of `urls.py`:
 
     ```python
-    path("", include("nextjs.urls"))
+    path("", include("django_nextjs.urls"))
     ```
 
 - **In Production:**
@@ -64,7 +74,7 @@ From a [comment on StackOverflow]:
 
     Pass `x-real-ip` header when proxying `/_next/`:
 
-    ```
+    ```conf
     location /_next/ {
         proxy_set_header  x-real-ip $remote_addr;
         proxy_pass  http://127.0.0.1:3000;
@@ -90,7 +100,7 @@ Write a django URL and view for each page like this:
 ```python
 # If you're using django channels
 from django.http import HttpResponse
-from nextjs.render import render_nextjs_page_async
+from django_nextjs.render import render_nextjs_page_async
 
 async def jobs(request):
     return await render_nextjs_page_async(request)
@@ -99,7 +109,7 @@ async def jobs(request):
 ```python
 # If you're not using django channels
 from django.http import HttpResponse
-from nextjs.render import render_nextjs_page_sync
+from django_nextjs.render import render_nextjs_page_sync
 
 def jobs(request):
     return render_nextjs_page_sync(request)
@@ -138,10 +148,10 @@ class MyDocument extends Document {
 export default MyDocument;
 ```
 
-Write a django template that extends `nextjs/document_base.html`:
+Write a django template that extends `django_nextjs/document_base.html`:
 
 ```django
-{% extends "nextjs/document_base.html" %}
+{% extends "django_nextjs/document_base.html" %}
 
 
 {% block head %}
@@ -183,10 +193,12 @@ def jobs(request):
 
 Default settings:
 
+```python
     NEXTJS_SETTINGS = {
         "nextjs_server_url": "http://127.0.0.1:3000",
         "nextjs_reverse_path": os.path.join(settings.BASE_DIR, "next", "reverse"),
     }
+```
 
 ### `nextjs_server_url`
 

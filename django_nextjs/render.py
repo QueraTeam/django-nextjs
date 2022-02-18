@@ -47,8 +47,8 @@ def _get_cookies(request):
 
 def _get_headers(request):
     return {
-        "x-real-ip": request.META.get("HTTP_X_REAL_IP", "") or request.META.get("REMOTE_ADDR", ""),
-        "user-agent": request.META.get("HTTP_USER_AGENT", ""),
+        "x-real-ip": request.headers.get("X-Real-Ip", "") or request.META.get("REMOTE_ADDR", ""),
+        "user-agent": request.headers.get("User-Agent", ""),
     }
 
 

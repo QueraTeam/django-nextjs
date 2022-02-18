@@ -10,8 +10,8 @@ from django import http
 from django.conf import settings
 from django.views import View
 
-from nextjs.app_settings import NEXTJS_SERVER_URL
-from nextjs.exceptions import NextJSImproperlyConfigured
+from django_nextjs.app_settings import NEXTJS_SERVER_URL
+from django_nextjs.exceptions import NextJSImproperlyConfigured
 
 
 class NextJSProxyHttpConsumer(AsyncHttpConsumer):
@@ -89,7 +89,7 @@ class NextJSProxyView(View):
     def get(self, request):
         url = NEXTJS_SERVER_URL + request.path + "?" + request.GET.urlencode()
 
-        if request.META.get("HTTP_ACCEPT", None) == "text/event-stream":
+        if request.headers.get("Accept", None) == "text/event-stream":
             response = requests.get(url, stream=True, cookies=request.COOKIES)
             ret = http.StreamingHttpResponse(response.iter_content())
         else:

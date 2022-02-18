@@ -3,7 +3,7 @@ from django.urls import re_path
 
 from .proxy import NextJSProxyView
 
-app_name = "nextjs"
+app_name = "django_nextjs"
 urlpatterns = []
 
 if settings.DEBUG:

@@ -6,7 +6,7 @@ from django.urls import get_resolver
 from django_js_reverse.core import generate_json
 from django_js_reverse.management.commands.collectstatic_js_reverse import Command as OriginalCommand
 
-from nextjs.app_settings import NEXTJS_REVERSE_PATH
+from django_nextjs.app_settings import NEXTJS_REVERSE_PATH
 
 
 class Command(OriginalCommand):

@@ -1,8 +1,6 @@
-# See https://pre-commit.com for more information
-# See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v4.1.0
     hooks:
       - id: trailing-whitespace # trims trailing whitespace
         args: [--markdown-linebreak-ext=md]
@@ -14,6 +12,17 @@ repos:
         args: [--remove]
       - id: check-merge-conflict # check for files that contain merge conflict strings
 
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: "1.4.0"
+    hooks:
+      - id: django-upgrade
+        args: [--target-version, "3.2"]
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.31.0
+    hooks:
+      - id: pyupgrade
+
   - repo: https://github.com/pycqa/isort
     rev: 5.10.1
     hooks:
@@ -21,6 +30,6 @@ repos:
         name: isort (python)
 
   - repo: https://github.com/psf/black
-    rev: 21.11b1
+    rev: 22.1.0
     hooks:
       - id: black

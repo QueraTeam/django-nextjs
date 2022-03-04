@@ -18,7 +18,7 @@ From a [comment on StackOverflow]:
 ## Installation
 
 - Install the python package.
-- Add `django_nextjs` to `INSTALLED_APPS`. It must be before `django_js_reverse`.
+- Add `django_nextjs` to `INSTALLED_APPS`.
 
 - **In Development Environment:**
 
@@ -196,17 +196,12 @@ Default settings:
 ```python
     NEXTJS_SETTINGS = {
         "nextjs_server_url": "http://127.0.0.1:3000",
-        "nextjs_reverse_path": os.path.join(settings.BASE_DIR, "next", "reverse"),
     }
 ```
 
 ### `nextjs_server_url`
 
 The URL of Next.js server (started by `npm run dev` or `npm run start`)
-
-### `nextjs_reverse_path`
-
-Path to a directory where generated `reverse.json` file should be saved.
 
 ## Development
 

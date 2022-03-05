@@ -17,7 +17,12 @@ From a [comment on StackOverflow]:
 
 ## Installation
 
-- Install the python package.
+- Install the latest version from PyPI.
+
+  ```shell
+  pip install django-nextjs
+  ```
+
 - Add `django_nextjs` to `INSTALLED_APPS`.
 
 - **In Development Environment:**
@@ -187,7 +192,7 @@ def jobs(request):
 - If you want to add a file to `public` directory of Next.js,
   that file should be in `public/next` subdirectory to work correctly.
 - If you're using django channels, make sure all your middlewares are
-  [async-capable](https://docs.djangoproject.com/en/3.1/topics/http/middleware/#asynchronous-support).
+  [async-capable](https://docs.djangoproject.com/en/dev/topics/http/middleware/#asynchronous-support).
 
 ## Settings
 

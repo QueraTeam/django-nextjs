@@ -10,13 +10,11 @@ from .app_settings import NEXTJS_SERVER_URL
 
 
 def _get_context(html: str, context: dict = None) -> dict:
-    if (a := html.find("<head>")) == -1:
-        return None
-    if (b := html.find('</head><body id="__django_nextjs_body"', a)) == -1:
-        return None
-    if (c := html.find('<div id="__django_nextjs_body_begin"', b)) == -1:
-        return None
-    if (d := html.find('<div id="__django_nextjs_body_end"', c)) == -1:
+    a = html.find("<head>")
+    b = html.find('</head><body id="__django_nextjs_body"', a)
+    c = html.find('<div id="__django_nextjs_body_begin"', b)
+    d = html.find('<div id="__django_nextjs_body_end"', c)
+    if a == -1 or b == -1 or c == -1 or d == -1:
         return None
 
     context = context or {}
@@ -66,8 +64,10 @@ def render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str =
     html = response.text
 
     # Apply template_name if provided
-    if template_name and (final_context := _get_context(html, context)) is not None:
-        return render_to_string(template_name, context=final_context, request=request, using=using)
+    if template_name:
+        final_context = _get_context(html, context)
+        if final_context is not None:
+            return render_to_string(template_name, context=final_context, request=request, using=using)
 
     # If no template_name, return original HTML
     return html
@@ -95,8 +95,12 @@ async def render_nextjs_page_to_string_async(
             html = await response.text()
 
     # Apply template_name if provided
-    if template_name and (final_context := _get_context(html, context)) is not None:
-        return await sync_to_async(render_to_string)(template_name, context=final_context, request=request, using=using)
+    if template_name:
+        final_context = _get_context(html, context)
+        if final_context is not None:
+            return await sync_to_async(render_to_string)(
+                template_name, context=final_context, request=request, using=using
+            )
 
     # If no template_name, return original HTML
     return html

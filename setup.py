@@ -10,7 +10,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.md"), "r", encoding="U
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
-dev_requirements = ["pre-commit", "pytest", "pytest-cov", "pytest-django", "responses", "black"]
+dev_requirements = ["pre-commit", "pytest", "pytest-cov", "pytest-django", "black"]
 
 setup(
     name="django-nextjs",
@@ -24,7 +24,7 @@ setup(
     download_url="https://github.com/QueraTeam/django-nextjs",
     packages=find_packages(".", include=("django_nextjs", "django_nextjs.*")),
     include_package_data=True,
-    install_requires=["Django>=3.2", "requests", "aiohttp", "channels", "websockets", "django_js_reverse"],
+    install_requires=["Django>=3.2", "requests", "aiohttp", "channels", "websockets"],
     extras_require={"dev": dev_requirements},
     classifiers=[
         "Development Status :: 5 - Production/Stable",

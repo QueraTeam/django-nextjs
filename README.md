@@ -1,7 +1,7 @@
 # Django Next.js
 
 [![](https://img.shields.io/pypi/v/django-nextjs.svg)](https://pypi.python.org/pypi/django-nextjs/)
-[![](https://github.com/QueraTeam/django-nextjs/workflows/Tests/badge.svg)](https://github.com/QueraTeam/django-nextjs/actions)
+[![](https://github.com/QueraTeam/django-nextjs/workflows/tests/badge.svg)](https://github.com/QueraTeam/django-nextjs/actions)
 [![](https://img.shields.io/github/license/QueraTeam/django-nextjs.svg)](https://github.com/QueraTeam/django-nextjs/blob/master/LICENSE)
 [![](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 

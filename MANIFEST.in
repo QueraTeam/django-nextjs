@@ -1,2 +1,2 @@
 include README.md
-recursive-include nextjs/templates *
+recursive-include django_nextjs/templates *

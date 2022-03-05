@@ -1,3 +1,3 @@
-default_app_config = "nextjs.apps.NextJSConfig"
+default_app_config = "django_nextjs.apps.NextJSConfig"
 
 __version__ = "2.1.1"

@@ -50,7 +50,7 @@ def _get_headers(request):
     }
 
 
-def render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str = "", context=None, using=None) -> str:
+def _render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str = "", context=None, using=None) -> str:
     page = requests.utils.quote(request.path_info.lstrip("/"))
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
 
@@ -67,20 +67,24 @@ def render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str =
     if template_name:
         final_context = _get_context(html, context)
         if final_context is not None:
-            return render_to_string(template_name, context=final_context, request=request, using=using)
+            html = render_to_string(template_name, context=final_context, request=request, using=using)
 
-    # If no template_name, return original HTML
+    return html, response.status_code
+
+
+def render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str = "", context=None, using=None) -> str:
+    html, _ = _render_nextjs_page_to_string_sync(request, template_name, context, using=using)
     return html
 
 
 def render_nextjs_page_sync(
-    request: HttpRequest, template_name: str = "", context=None, content_type=None, status=None, using=None
+    request: HttpRequest, template_name: str = "", context=None, content_type=None, override_status=None, using=None
 ) -> str:
-    content = render_nextjs_page_to_string_sync(request, template_name, context, using=using)
-    return HttpResponse(content, content_type, status)
+    content, status = _render_nextjs_page_to_string_sync(request, template_name, context, using=using)
+    return HttpResponse(content, content_type, status if override_status is None else override_status)
 
 
-async def render_nextjs_page_to_string_async(
+async def _render_nextjs_page_to_string_async(
     request: HttpRequest, template_name: str = "", context=None, using=None
 ) -> str:
     page = requests.utils.quote(request.path_info.lstrip("/"))
@@ -98,16 +102,21 @@ async def render_nextjs_page_to_string_async(
     if template_name:
         final_context = _get_context(html, context)
         if final_context is not None:
-            return await sync_to_async(render_to_string)(
+            html = await sync_to_async(render_to_string)(
                 template_name, context=final_context, request=request, using=using
             )
+    return html, response.status
 
-    # If no template_name, return original HTML
+
+async def render_nextjs_page_to_string_async(
+    request: HttpRequest, template_name: str = "", context=None, using=None
+) -> str:
+    html, _ = await _render_nextjs_page_to_string_async(request, template_name, context, using=using)
     return html
 
 
 async def render_nextjs_page_async(
-    request: HttpRequest, template_name: str = "", context=None, content_type=None, status=None, using=None
+    request: HttpRequest, template_name: str = "", context=None, content_type=None, override_status=None, using=None
 ) -> str:
-    content = await render_nextjs_page_to_string_async(request, template_name, context, using=using)
-    return HttpResponse(content, content_type, status)
+    content, status = await _render_nextjs_page_to_string_async(request, template_name, context, using=using)
+    return HttpResponse(content, content_type, status if override_status is None else override_status)

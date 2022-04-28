@@ -40,7 +40,7 @@ def _get_cookies(request):
     (i.e. dont use HTTP unsafe methods or GraphQL mutations).
     https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability
     """
-    return request.COOKIES | {settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
+    return {**request.COOKIES, settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
 
 
 def _get_headers(request):

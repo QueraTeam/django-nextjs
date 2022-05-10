@@ -50,6 +50,13 @@ def _get_headers(request):
     }
 
 
+def _get_nextjs_response_headers(headers):
+    useful_header_keys = [
+        "Location",
+    ]
+    return {key: headers[key] for key in useful_header_keys if key in headers}
+
+
 def _render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str = "", context=None, using=None) -> str:
     page = requests.utils.quote(request.path_info.lstrip("/"))
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
@@ -60,8 +67,10 @@ def _render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str 
         params=params,
         cookies=_get_cookies(request),
         headers=_get_headers(request),
+        allow_redirects=False,
     )
     html = response.text
+    response_headers = _get_nextjs_response_headers(response.headers)
 
     # Apply template_name if provided
     if template_name:
@@ -69,19 +78,19 @@ def _render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str 
         if final_context is not None:
             html = render_to_string(template_name, context=final_context, request=request, using=using)
 
-    return html, response.status_code
+    return html, response.status_code, response_headers
 
 
 def render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str = "", context=None, using=None) -> str:
-    html, _ = _render_nextjs_page_to_string_sync(request, template_name, context, using=using)
+    html, _, _ = _render_nextjs_page_to_string_sync(request, template_name, context, using=using)
     return html
 
 
 def render_nextjs_page_sync(
     request: HttpRequest, template_name: str = "", context=None, content_type=None, override_status=None, using=None
 ) -> str:
-    content, status = _render_nextjs_page_to_string_sync(request, template_name, context, using=using)
-    return HttpResponse(content, content_type, status if override_status is None else override_status)
+    content, status, headers = _render_nextjs_page_to_string_sync(request, template_name, context, using=using)
+    return HttpResponse(content, content_type, status if override_status is None else override_status, headers=headers)
 
 
 async def _render_nextjs_page_to_string_async(
@@ -95,8 +104,9 @@ async def _render_nextjs_page_to_string_async(
         cookies=_get_cookies(request),
         headers=_get_headers(request),
     ) as session:
-        async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params) as response:
+        async with session.get(f"{NEXTJS_SERVER_URL}/{page}", params=params, allow_redirects=False) as response:
             html = await response.text()
+            response_headers = _get_nextjs_response_headers(response.headers)
 
     # Apply template_name if provided
     if template_name:
@@ -105,18 +115,18 @@ async def _render_nextjs_page_to_string_async(
             html = await sync_to_async(render_to_string)(
                 template_name, context=final_context, request=request, using=using
             )
-    return html, response.status
+    return html, response.status, response_headers
 
 
 async def render_nextjs_page_to_string_async(
     request: HttpRequest, template_name: str = "", context=None, using=None
 ) -> str:
-    html, _ = await _render_nextjs_page_to_string_async(request, template_name, context, using=using)
+    html, _, _ = await _render_nextjs_page_to_string_async(request, template_name, context, using=using)
     return html
 
 
 async def render_nextjs_page_async(
     request: HttpRequest, template_name: str = "", context=None, content_type=None, override_status=None, using=None
 ) -> str:
-    content, status = await _render_nextjs_page_to_string_async(request, template_name, context, using=using)
-    return HttpResponse(content, content_type, status if override_status is None else override_status)
+    content, status, headers = await _render_nextjs_page_to_string_async(request, template_name, context, using=using)
+    return HttpResponse(content, content_type, status if override_status is None else override_status, headers=headers)

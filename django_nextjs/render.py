@@ -2,9 +2,10 @@ import aiohttp
 import requests
 from asgiref.sync import sync_to_async
 from django.conf import settings
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponsePermanentRedirect
 from django.middleware.csrf import get_token as get_csrf_token
 from django.template.loader import render_to_string
+from rest_framework import status as http_status
 
 from .app_settings import NEXTJS_SERVER_URL
 
@@ -61,6 +62,10 @@ def _render_nextjs_page_to_string_sync(request: HttpRequest, template_name: str 
         cookies=_get_cookies(request),
         headers=_get_headers(request),
     )
+
+    if response.history:
+        response = response.history[0]
+
     html = response.text
 
     # Apply template_name if provided
@@ -81,6 +86,8 @@ def render_nextjs_page_sync(
     request: HttpRequest, template_name: str = "", context=None, content_type=None, override_status=None, using=None
 ) -> str:
     content, status = _render_nextjs_page_to_string_sync(request, template_name, context, using=using)
+    if status == http_status.HTTP_308_PERMANENT_REDIRECT:
+        return HttpResponsePermanentRedirect(content)
     return HttpResponse(content, content_type, status if override_status is None else override_status)
 
 

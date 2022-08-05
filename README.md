@@ -27,7 +27,7 @@ From a [comment on StackOverflow]:
 
 - **In Development Environment:**
 
-  - If you're using django channels, add `NextJSProxyHttpConsumer` and `NextJSProxyWebsocketConsumer` to `asgi.py`:
+  - If you're using django channels (after Nextjs v12 you need this to be able to use hot-reload), add `NextJSProxyHttpConsumer` and `NextJSProxyWebsocketConsumer` to `asgi.py`:
 
     ```python
     import os
@@ -44,8 +44,10 @@ From a [comment on StackOverflow]:
 
     from django.conf import settings
 
-    http_routes = [...]
-    websocket_routers = [...]
+    # put your custom routes here if you need
+    http_routes = [re_path(r"", django_asgi_app)]
+    websocket_routers = []
+
     if settings.DEBUG:
         http_routes.insert(0, re_path(r"^(?:_next|__next|next).*", NextJSProxyHttpConsumer.as_asgi()))
         websocket_routers.insert(0, path("_next/webpack-hmr", NextJSProxyWebsocketConsumer.as_asgi()))

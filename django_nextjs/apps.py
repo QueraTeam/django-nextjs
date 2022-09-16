@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class NextJSConfig(AppConfig):
+class DjangoNextJSConfig(AppConfig):
     name = "django_nextjs"
     verbose_name = "Django NextJS"

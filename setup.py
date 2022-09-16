@@ -4,13 +4,19 @@ from setuptools import find_packages, setup
 
 from django_nextjs import __version__
 
-with open(os.path.join(os.path.dirname(__file__), "README.md"), "r", encoding="UTF-8") as readme:
+with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding="UTF-8") as readme:
     README = readme.read()
 
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
-dev_requirements = ["pre-commit", "pytest", "pytest-cov", "pytest-django", "black"]
+dev_requirements = [
+    "pre-commit",
+    "pytest>=7",
+    "pytest-cov",
+    "pytest-django",
+    "black",
+]
 
 setup(
     name="django-nextjs",
@@ -24,7 +30,7 @@ setup(
     download_url="https://github.com/QueraTeam/django-nextjs",
     packages=find_packages(".", include=("django_nextjs", "django_nextjs.*")),
     include_package_data=True,
-    install_requires=["Django>=3.2", "requests", "aiohttp", "channels", "websockets"],
+    install_requires=["Django >= 3.2, != 4.1.0", "requests", "aiohttp", "channels", "websockets"],
     extras_require={"dev": dev_requirements},
     classifiers=[
         "Development Status :: 5 - Production/Stable",

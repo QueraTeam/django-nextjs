@@ -23,7 +23,7 @@ From a [comment on StackOverflow]:
   pip install django-nextjs
   ```
 
-- Add `django_nextjs` to `INSTALLED_APPS`.
+- Add `django_nextjs.apps.DjangoNextJSConfig` to `INSTALLED_APPS`.
 
 - **In Development Environment:**
 

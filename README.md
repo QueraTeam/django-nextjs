@@ -11,13 +11,15 @@ So you want to use both Django and Next.js in your project. There are two scenar
 
 1. You are starting a new project and you want to use Django as back-end and Next.js as front-end.
    Django only serves API requests. All front-end code lives in Next.js and you don't write any Django template.
+
    In this scenario you **don't need** this package (although you can use it).
    You simply start both Django and Next.js servers and point your public webserver to Next.js.
 
-2. You need both Django templates and Next.js at the same time and those pages should easily link to eachother.
+2. You need both Django templates and Next.js at the same time and those pages should easily link to each other.
    Maybe you have an existing Django project which has pages rendered by Django template
    and want some new pages in Next.js.
    Or you want to migrate your front-end to Next.js but since the project is large, you need to do it gradually.
+
    In this scenario, **this package is for you!**
 
 ## How does it work?

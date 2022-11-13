@@ -212,6 +212,9 @@ def jobs(request):
   that file should be in `public/next` subdirectory to work correctly.
 - If you're using django channels, make sure all your middlewares are
   [async-capable](https://docs.djangoproject.com/en/dev/topics/http/middleware/#asynchronous-support).
+- To avoid "Too many redirects" error, you may need to add `APPEND_SLASH = False` in your Django project's `settings.py`. Also, do not add `/` at the end of nextjs paths in `urls.py`.
+- This package does not provide a solution for passing data from Django to Next.js. The Django Rest Framework, GraphQL, or similar solutions should still be used.
+- The Next.js server will not be run by this package. You will need to run it yourself.
 
 ## Settings
 

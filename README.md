@@ -7,8 +7,6 @@
 
 Next.js integration for Django projects.
 
-## Use Case
-
 So you want to use both Django and Next.js in your project. There are two scenarios:
 
 1. You are starting a new project and you want to use Django as back-end and Next.js as front-end.

@@ -239,3 +239,7 @@ The URL of Next.js server (started by `npm run dev` or `npm run start`)
 
 [comment on stackoverflow]: https://stackoverflow.com/questions/54252943/is-there-a-way-to-integrate-django-with-next-js#comment110078700_54252943
 [customize next's document]: https://nextjs.org/docs/advanced-features/custom-document
+
+## License
+
+MIT

@@ -9,3 +9,5 @@ build/
 dist/
 htmlcov
 venv/
+
+.vscode/settings.json

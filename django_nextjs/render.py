@@ -1,3 +1,5 @@
+import typing
+
 import aiohttp
 import requests
 from asgiref.sync import sync_to_async
@@ -9,7 +11,7 @@ from django.template.loader import render_to_string
 from .app_settings import NEXTJS_SERVER_URL
 
 
-def _get_context(html: str, context: dict = None) -> dict:
+def _get_context(html: str, context: typing.Union[dict, None] = None) -> typing.Union[dict, None]:
     a = html.find("<head>")
     b = html.find('</head><body id="__django_nextjs_body"', a)
     c = html.find('<div id="__django_nextjs_body_begin"', b)
@@ -59,7 +61,7 @@ def _get_nextjs_response_headers(headers):
 
 def _render_nextjs_page_to_string_sync(
     request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False
-) -> str:
+) -> typing.Tuple[str, int, typing.Dict[str, str]]:
     page = requests.utils.quote(request.path_info.lstrip("/"))
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
 
@@ -100,7 +102,7 @@ def render_nextjs_page_sync(
     override_status=None,
     using=None,
     allow_redirects=False,
-) -> str:
+) -> HttpResponse:
     content, status, headers = _render_nextjs_page_to_string_sync(
         request, template_name, context, using=using, allow_redirects=allow_redirects
     )
@@ -109,7 +111,7 @@ def render_nextjs_page_sync(
 
 async def _render_nextjs_page_to_string_async(
     request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False
-) -> str:
+) -> typing.Tuple[str, int, typing.Dict[str, str]]:
     page = requests.utils.quote(request.path_info.lstrip("/"))
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
@@ -151,7 +153,7 @@ async def render_nextjs_page_async(
     override_status=None,
     using=None,
     allow_redirects=False,
-) -> str:
+) -> HttpResponse:
     content, status, headers = await _render_nextjs_page_to_string_async(
         request, template_name, context, using=using, allow_redirects=allow_redirects
     )

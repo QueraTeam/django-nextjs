@@ -31,7 +31,7 @@ def _get_context(html: str, context: typing.Union[dict, None] = None) -> typing.
     return context
 
 
-def _get_cookies(request):
+def _get_cookies(request: HttpRequest):
     """
     Ensure we always send a CSRF cookie to Next.js server (if there is none in `request` object, generate one)
     Reason: We are going to issue GraphQL POST requests to fetch data in NextJS getServerSideProps.
@@ -45,7 +45,10 @@ def _get_cookies(request):
     return {**request.COOKIES, settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
 
 
-def _get_headers(request, headers=None):
+def _get_headers(request: HttpRequest, headers=None):
+    """
+    Headers that we will send in request to Next.js
+    """
     return {
         "x-real-ip": request.headers.get("X-Real-Ip", "") or request.META.get("REMOTE_ADDR", ""),
         "user-agent": request.headers.get("User-Agent", ""),
@@ -105,10 +108,11 @@ def render_nextjs_page_sync(
     allow_redirects=False,
     headers=None,
 ) -> HttpResponse:
-    content, status, headers = _render_nextjs_page_to_string_sync(
+    content, status, response_headers = _render_nextjs_page_to_string_sync(
         request, template_name, context, using=using, allow_redirects=allow_redirects, headers=headers
     )
-    return HttpResponse(content, content_type, status if override_status is None else override_status, headers=headers)
+    final_status = status if override_status is None else override_status
+    return HttpResponse(content, content_type, final_status, headers=response_headers)
 
 
 async def _render_nextjs_page_to_string_async(
@@ -157,7 +161,8 @@ async def render_nextjs_page_async(
     allow_redirects=False,
     headers=None,
 ) -> HttpResponse:
-    content, status, headers = await _render_nextjs_page_to_string_async(
+    content, status, response_headers = await _render_nextjs_page_to_string_async(
         request, template_name, context, using=using, allow_redirects=allow_redirects, headers=headers
     )
-    return HttpResponse(content, content_type, status if override_status is None else override_status, headers=headers)
+    final_status = status if override_status is None else override_status
+    return HttpResponse(content, content_type, final_status, headers=response_headers)

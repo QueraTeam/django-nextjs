@@ -45,10 +45,11 @@ def _get_cookies(request):
     return {**request.COOKIES, settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
 
 
-def _get_headers(request):
+def _get_headers(request, headers=None):
     return {
         "x-real-ip": request.headers.get("X-Real-Ip", "") or request.META.get("REMOTE_ADDR", ""),
         "user-agent": request.headers.get("User-Agent", ""),
+        **({} if headers is None else headers)
     }
 
 
@@ -60,7 +61,7 @@ def _get_nextjs_response_headers(headers):
 
 
 def _render_nextjs_page_to_string_sync(
-    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False
+    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False, headers=None
 ) -> typing.Tuple[str, int, typing.Dict[str, str]]:
     page = requests.utils.quote(request.path_info.lstrip("/"))
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
@@ -70,7 +71,7 @@ def _render_nextjs_page_to_string_sync(
         f"{NEXTJS_SERVER_URL}/{page}",
         params=params,
         cookies=_get_cookies(request),
-        headers=_get_headers(request),
+        headers=_get_headers(request, headers),
         allow_redirects=allow_redirects,
     )
     html = response.text
@@ -86,10 +87,10 @@ def _render_nextjs_page_to_string_sync(
 
 
 def render_nextjs_page_to_string_sync(
-    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False
+    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False, headers=None
 ) -> str:
     html, _, _ = _render_nextjs_page_to_string_sync(
-        request, template_name, context, using=using, allow_redirects=allow_redirects
+        request, template_name, context, using=using, allow_redirects=allow_redirects, headers=headers
     )
     return html
 
@@ -102,15 +103,16 @@ def render_nextjs_page_sync(
     override_status=None,
     using=None,
     allow_redirects=False,
+    headers=None,
 ) -> HttpResponse:
     content, status, headers = _render_nextjs_page_to_string_sync(
-        request, template_name, context, using=using, allow_redirects=allow_redirects
+        request, template_name, context, using=using, allow_redirects=allow_redirects, headers=headers
     )
     return HttpResponse(content, content_type, status if override_status is None else override_status, headers=headers)
 
 
 async def _render_nextjs_page_to_string_async(
-    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False
+    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False, headers=None
 ) -> typing.Tuple[str, int, typing.Dict[str, str]]:
     page = requests.utils.quote(request.path_info.lstrip("/"))
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
@@ -118,7 +120,7 @@ async def _render_nextjs_page_to_string_async(
     # Get HTML from Next.js server
     async with aiohttp.ClientSession(
         cookies=_get_cookies(request),
-        headers=_get_headers(request),
+        headers=_get_headers(request, headers),
     ) as session:
         async with session.get(
             f"{NEXTJS_SERVER_URL}/{page}", params=params, allow_redirects=allow_redirects
@@ -137,10 +139,10 @@ async def _render_nextjs_page_to_string_async(
 
 
 async def render_nextjs_page_to_string_async(
-    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False
+    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False, headers=None
 ) -> str:
     html, _, _ = await _render_nextjs_page_to_string_async(
-        request, template_name, context, using=using, allow_redirects=allow_redirects
+        request, template_name, context, using=using, allow_redirects=allow_redirects, headers=headers
     )
     return html
 
@@ -153,8 +155,9 @@ async def render_nextjs_page_async(
     override_status=None,
     using=None,
     allow_redirects=False,
+    headers=None,
 ) -> HttpResponse:
     content, status, headers = await _render_nextjs_page_to_string_async(
-        request, template_name, context, using=using, allow_redirects=allow_redirects
+        request, template_name, context, using=using, allow_redirects=allow_redirects, headers=headers
     )
     return HttpResponse(content, content_type, status if override_status is None else override_status, headers=headers)

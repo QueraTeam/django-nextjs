@@ -49,7 +49,7 @@ def _get_headers(request, headers=None):
     return {
         "x-real-ip": request.headers.get("X-Real-Ip", "") or request.META.get("REMOTE_ADDR", ""),
         "user-agent": request.headers.get("User-Agent", ""),
-        **({} if headers is None else headers)
+        **({} if headers is None else headers),
     }
 
 

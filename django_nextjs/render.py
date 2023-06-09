@@ -64,14 +64,23 @@ def _get_nextjs_response_headers(headers):
 
 
 def _render_nextjs_page_to_string_sync(
-    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False, headers=None
+    request: HttpRequest,
+    template_name: str = "",
+    context=None,
+    using=None,
+    allow_redirects=False,
+    headers=None,
+    nextjs_server_url=None,
 ) -> typing.Tuple[str, int, typing.Dict[str, str]]:
     page = requests.utils.quote(request.path_info.lstrip("/"))
     params = {k: request.GET.getlist(k) for k in request.GET.keys()}
 
+    if nextjs_server_url is None:
+        nextjs_server_url = NEXTJS_SERVER_URL
+
     # Get HTML from Next.js server
     response = requests.get(
-        f"{NEXTJS_SERVER_URL}/{page}",
+        f"{nextjs_server_url}/{page}",
         params=params,
         cookies=_get_cookies(request),
         headers=_get_headers(request, headers),
@@ -90,10 +99,22 @@ def _render_nextjs_page_to_string_sync(
 
 
 def render_nextjs_page_to_string_sync(
-    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False, headers=None
+    request: HttpRequest,
+    template_name: str = "",
+    context=None,
+    using=None,
+    allow_redirects=False,
+    headers=None,
+    nextjs_server_url=None,
 ) -> str:
     html, _, _ = _render_nextjs_page_to_string_sync(
-        request, template_name, context, using=using, allow_redirects=allow_redirects, headers=headers
+        request,
+        template_name,
+        context,
+        using=using,
+        allow_redirects=allow_redirects,
+        headers=headers,
+        nextjs_server_url=nextjs_server_url,
     )
     return html
 
@@ -107,19 +128,35 @@ def render_nextjs_page_sync(
     using=None,
     allow_redirects=False,
     headers=None,
+    nextjs_server_url=None,
 ) -> HttpResponse:
     content, status, response_headers = _render_nextjs_page_to_string_sync(
-        request, template_name, context, using=using, allow_redirects=allow_redirects, headers=headers
+        request,
+        template_name,
+        context,
+        using=using,
+        allow_redirects=allow_redirects,
+        headers=headers,
+        nextjs_server_url=nextjs_server_url,
     )
     final_status = status if override_status is None else override_status
     return HttpResponse(content, content_type, final_status, headers=response_headers)
 
 
 async def _render_nextjs_page_to_string_async(
-    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False, headers=None
+    request: HttpRequest,
+    template_name: str = "",
+    context=None,
+    using=None,
+    allow_redirects=False,
+    headers=None,
+    nextjs_server_url=None,
 ) -> typing.Tuple[str, int, typing.Dict[str, str]]:
     page = requests.utils.quote(request.path_info.lstrip("/"))
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
+
+    if nextjs_server_url is None:
+        nextjs_server_url = NEXTJS_SERVER_URL
 
     # Get HTML from Next.js server
     async with aiohttp.ClientSession(
@@ -127,7 +164,7 @@ async def _render_nextjs_page_to_string_async(
         headers=_get_headers(request, headers),
     ) as session:
         async with session.get(
-            f"{NEXTJS_SERVER_URL}/{page}", params=params, allow_redirects=allow_redirects
+            f"{nextjs_server_url}/{page}", params=params, allow_redirects=allow_redirects
         ) as response:
             html = await response.text()
             response_headers = _get_nextjs_response_headers(response.headers)
@@ -143,10 +180,22 @@ async def _render_nextjs_page_to_string_async(
 
 
 async def render_nextjs_page_to_string_async(
-    request: HttpRequest, template_name: str = "", context=None, using=None, allow_redirects=False, headers=None
+    request: HttpRequest,
+    template_name: str = "",
+    context=None,
+    using=None,
+    allow_redirects=False,
+    headers=None,
+    nextjs_server_url=None,
 ) -> str:
     html, _, _ = await _render_nextjs_page_to_string_async(
-        request, template_name, context, using=using, allow_redirects=allow_redirects, headers=headers
+        request,
+        template_name,
+        context,
+        using=using,
+        allow_redirects=allow_redirects,
+        headers=headers,
+        nextjs_server_url=nextjs_server_url,
     )
     return html
 
@@ -160,9 +209,16 @@ async def render_nextjs_page_async(
     using=None,
     allow_redirects=False,
     headers=None,
+    nextjs_server_url=None,
 ) -> HttpResponse:
     content, status, response_headers = await _render_nextjs_page_to_string_async(
-        request, template_name, context, using=using, allow_redirects=allow_redirects, headers=headers
+        request,
+        template_name,
+        context,
+        using=using,
+        allow_redirects=allow_redirects,
+        headers=headers,
+        nextjs_server_url=nextjs_server_url,
     )
     final_status = status if override_status is None else override_status
     return HttpResponse(content, content_type, final_status, headers=response_headers)

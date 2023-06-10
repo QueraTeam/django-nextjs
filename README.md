@@ -44,7 +44,12 @@ From a [comment on StackOverflow]:
 
 - **In Development Environment:**
 
-  - If you're using django channels (after Nextjs v12 you need this to be able to use hot-reload), add `NextJSProxyHttpConsumer` and `NextJSProxyWebsocketConsumer` to `asgi.py`:
+  - If you're serving your site under ASGI during development,
+    use [Django Channels](https://channels.readthedocs.io/en/stable/) and
+    add `NextJSProxyHttpConsumer`, `NextJSProxyWebsocketConsumer` to `asgi.py` like the following example.
+
+    **Note:** We recommend this method,
+    because it is required for [fast refresh](https://nextjs.org/docs/architecture/fast-refresh) (hot module replacement) to work properly in Nextjs 12+.
 
     ```python
     import os
@@ -80,11 +85,14 @@ From a [comment on StackOverflow]:
     )
     ```
 
-  - Otherwise, add the following to the beginning of `urls.py`:
+  - Otherwise (if serving under WSGI during development), add the following to the beginning of `urls.py`:
 
     ```python
     path("", include("django_nextjs.urls"))
     ```
+
+    **Warning:** If you are serving under ASGI, do NOT add this
+    to your `urls.py`. It may cause deadlocks.
 
 - **In Production:**
 

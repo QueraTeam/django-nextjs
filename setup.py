@@ -15,7 +15,9 @@ dev_requirements = [
     "pytest>=7",
     "pytest-cov",
     "pytest-django",
+    "pytest-asyncio",
     "black",
+    "isort",
 ]
 
 setup(

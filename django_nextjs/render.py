@@ -1,37 +1,39 @@
-import typing
+from typing import Dict, Tuple, Union
+from urllib.parse import quote
 
 import aiohttp
-import requests
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync, sync_to_async
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.middleware.csrf import get_token as get_csrf_token
 from django.template.loader import render_to_string
+from multidict import MultiMapping
 
 from .app_settings import NEXTJS_SERVER_URL
 
 
-def _get_context(html: str, context: typing.Union[dict, None] = None) -> typing.Union[dict, None]:
+def _get_render_context(html: str, extra_context: Union[Dict, None] = None):
     a = html.find("<head>")
     b = html.find('</head><body id="__django_nextjs_body"', a)
     c = html.find('<div id="__django_nextjs_body_begin"', b)
     d = html.find('<div id="__django_nextjs_body_end"', c)
-    if a == -1 or b == -1 or c == -1 or d == -1:
+
+    if any(i == -1 for i in (a, b, c, d)):
         return None
 
-    context = context or {}
-    context["django_nextjs__"] = {
-        "section1": html[: a + len("<head>")],
-        "section2": html[a + len("<head>") : b],
-        "section3": html[b:c],
-        "section4": html[c:d],
-        "section5": html[d:],
+    return {
+        **(extra_context or {}),
+        "django_nextjs__": {
+            "section1": html[: a + len("<head>")],
+            "section2": html[a + len("<head>") : b],
+            "section3": html[b:c],
+            "section4": html[c:d],
+            "section5": html[d:],
+        },
     }
 
-    return context
 
-
-def _get_cookies(request: HttpRequest):
+def _get_nextjs_request_cookies(request: HttpRequest):
     """
     Ensure we always send a CSRF cookie to Next.js server (if there is none in `request` object, generate one)
     Reason: We are going to issue GraphQL POST requests to fetch data in NextJS getServerSideProps.
@@ -45,10 +47,7 @@ def _get_cookies(request: HttpRequest):
     return {**request.COOKIES, settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
 
 
-def _get_headers(request: HttpRequest, headers=None):
-    """
-    Headers that we will send in request to Next.js
-    """
+def _get_nextjs_request_headers(request: HttpRequest, headers: Union[Dict, None] = None):
     return {
         "x-real-ip": request.headers.get("X-Real-Ip", "") or request.META.get("REMOTE_ADDR", ""),
         "user-agent": request.headers.get("User-Agent", ""),
@@ -56,125 +55,43 @@ def _get_headers(request: HttpRequest, headers=None):
     }
 
 
-def _get_nextjs_response_headers(headers):
-    useful_header_keys = [
-        "Location",
-    ]
+def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
+    useful_header_keys = ("Location",)
     return {key: headers[key] for key in useful_header_keys if key in headers}
-
-
-def _render_nextjs_page_to_string_sync(
-    request: HttpRequest,
-    template_name: str = "",
-    context=None,
-    using=None,
-    allow_redirects=False,
-    headers=None,
-    nextjs_server_url=None,
-) -> typing.Tuple[str, int, typing.Dict[str, str]]:
-    page = requests.utils.quote(request.path_info.lstrip("/"))
-    params = {k: request.GET.getlist(k) for k in request.GET.keys()}
-
-    if nextjs_server_url is None:
-        nextjs_server_url = NEXTJS_SERVER_URL
-
-    # Get HTML from Next.js server
-    response = requests.get(
-        f"{nextjs_server_url}/{page}",
-        params=params,
-        cookies=_get_cookies(request),
-        headers=_get_headers(request, headers),
-        allow_redirects=allow_redirects,
-    )
-    html = response.text
-    response_headers = _get_nextjs_response_headers(response.headers)
-
-    # Apply template_name if provided
-    if template_name:
-        final_context = _get_context(html, context)
-        if final_context is not None:
-            html = render_to_string(template_name, context=final_context, request=request, using=using)
-
-    return html, response.status_code, response_headers
-
-
-def render_nextjs_page_to_string_sync(
-    request: HttpRequest,
-    template_name: str = "",
-    context=None,
-    using=None,
-    allow_redirects=False,
-    headers=None,
-    nextjs_server_url=None,
-) -> str:
-    html, _, _ = _render_nextjs_page_to_string_sync(
-        request,
-        template_name,
-        context,
-        using=using,
-        allow_redirects=allow_redirects,
-        headers=headers,
-        nextjs_server_url=nextjs_server_url,
-    )
-    return html
-
-
-def render_nextjs_page_sync(
-    request: HttpRequest,
-    template_name: str = "",
-    context=None,
-    content_type=None,
-    override_status=None,
-    using=None,
-    allow_redirects=False,
-    headers=None,
-    nextjs_server_url=None,
-) -> HttpResponse:
-    content, status, response_headers = _render_nextjs_page_to_string_sync(
-        request,
-        template_name,
-        context,
-        using=using,
-        allow_redirects=allow_redirects,
-        headers=headers,
-        nextjs_server_url=nextjs_server_url,
-    )
-    final_status = status if override_status is None else override_status
-    return HttpResponse(content, content_type, final_status, headers=response_headers)
 
 
 async def _render_nextjs_page_to_string_async(
     request: HttpRequest,
     template_name: str = "",
-    context=None,
-    using=None,
-    allow_redirects=False,
-    headers=None,
-    nextjs_server_url=None,
-) -> typing.Tuple[str, int, typing.Dict[str, str]]:
-    page = requests.utils.quote(request.path_info.lstrip("/"))
-    params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
-
-    if nextjs_server_url is None:
+    context: Union[Dict, None] = None,
+    using: Union[str, None] = None,
+    allow_redirects: bool = False,
+    headers: Union[Dict, None] = None,
+    nextjs_server_url: str = "",
+) -> Tuple[str, int, Dict[str, str]]:
+    if not nextjs_server_url:
         nextjs_server_url = NEXTJS_SERVER_URL
+
+    page_path = quote(request.path_info.lstrip("/"))
+    params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
     # Get HTML from Next.js server
     async with aiohttp.ClientSession(
-        cookies=_get_cookies(request),
-        headers=_get_headers(request, headers),
+        cookies=_get_nextjs_request_cookies(request),
+        headers=_get_nextjs_request_headers(request, headers),
     ) as session:
         async with session.get(
-            f"{nextjs_server_url}/{page}", params=params, allow_redirects=allow_redirects
+            f"{nextjs_server_url}/{page_path}", params=params, allow_redirects=allow_redirects
         ) as response:
             html = await response.text()
             response_headers = _get_nextjs_response_headers(response.headers)
 
-    # Apply template_name if provided
+    # Apply template rendering if provided template_name
     if template_name:
-        final_context = _get_context(html, context)
-        if final_context is not None:
+        render_context = _get_render_context(html, context)
+        if render_context is not None:
             html = await sync_to_async(render_to_string)(
-                template_name, context=final_context, request=request, using=using
+                template_name, context=render_context, request=request, using=using
             )
     return html, response.status, response_headers
 
@@ -182,12 +99,12 @@ async def _render_nextjs_page_to_string_async(
 async def render_nextjs_page_to_string_async(
     request: HttpRequest,
     template_name: str = "",
-    context=None,
-    using=None,
-    allow_redirects=False,
-    headers=None,
-    nextjs_server_url=None,
-) -> str:
+    context: Union[Dict, None] = None,
+    using: Union[str, None] = None,
+    allow_redirects: bool = False,
+    headers: Union[Dict, None] = None,
+    nextjs_server_url: str = "",
+):
     html, _, _ = await _render_nextjs_page_to_string_async(
         request,
         template_name,
@@ -203,14 +120,14 @@ async def render_nextjs_page_to_string_async(
 async def render_nextjs_page_async(
     request: HttpRequest,
     template_name: str = "",
-    context=None,
-    content_type=None,
-    override_status=None,
-    using=None,
-    allow_redirects=False,
-    headers=None,
-    nextjs_server_url=None,
-) -> HttpResponse:
+    context: Union[Dict, None] = None,
+    content_type: Union[str, None] = None,
+    override_status: Union[int, None] = None,
+    using: Union[str, None] = None,
+    allow_redirects: bool = False,
+    headers: Union[Dict, None] = None,
+    nextjs_server_url: str = "",
+):
     content, status, response_headers = await _render_nextjs_page_to_string_async(
         request,
         template_name,
@@ -222,3 +139,7 @@ async def render_nextjs_page_async(
     )
     final_status = status if override_status is None else override_status
     return HttpResponse(content, content_type, final_status, headers=response_headers)
+
+
+render_nextjs_page_to_string_sync = async_to_sync(render_nextjs_page_to_string_async)
+render_nextjs_page_sync = async_to_sync(render_nextjs_page_async)

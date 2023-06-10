@@ -109,9 +109,19 @@ In production, use a reverse proxy like Nginx or Caddy:
 Pass `x-real-ip` header when proxying `/_next/`. Example config for Nginx:
 
 ```conf
+location /_next/static/ {
+    alias NEXTJS_PATH/.next/static/;
+    expires max;
+    add_header Cache-Control "public";
+}
 location /_next/ {
     proxy_set_header  x-real-ip $remote_addr;
     proxy_pass  http://127.0.0.1:3000;
+}
+location /next/ {
+    alias NEXTJS_PATH/public/next/;
+    expires max;
+    add_header Cache-Control "public";
 }
 ```
 

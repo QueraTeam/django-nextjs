@@ -1,6 +1,7 @@
 import asyncio
 import re
 import urllib.request
+from http.client import HTTPResponse
 
 import aiohttp
 import websockets
@@ -97,9 +98,10 @@ class NextJSProxyView(View):
             self._iter_content(urllib_response), headers={"Content-Type": urllib_response.headers.get("Content-Type")}
         )
 
-    def _iter_content(self, urllib_response):
+    def _iter_content(self, urllib_response: HTTPResponse):
         while True:
             chunk = urllib_response.read(urllib_response.length or 1)
             if not chunk:
+                urllib_response.close()
                 break
             yield chunk

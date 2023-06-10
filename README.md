@@ -139,37 +139,53 @@ def jobs(request):
     return render_nextjs_page_sync(request)
 ```
 
-## Customizing Document
+## Customizing the HTML Response
 
-If you want to customize the HTML document (e.g. add header or footer), read this section.
+You can modify the HTML code that Next.js returns in your Django code.
 
-You need to [customize Next's document]:
+Avoiding duplicate code for the navbar and footer is a common use case
+for this if you are using both Next.js and Django templates.
+Without it, you would have to write and maintain two separate versions
+of your navbar and footer (a Django template version and a Next.js version).
+However, you can simply create a Django template for your navbar and insert its code
+at the beginning of `<body>` tag returned from Next.js.
+
+To enable this feature, you need to customize the document and root layout
+in Next.js and make the following adjustments:
 
 - Add `id="__django_nextjs_body"` as the first attribute of `<body>` element.
 - Add `<div id="__django_nextjs_body_begin" />` as the first element inside `<body>`.
 - Add `<div id="__django_nextjs_body_end" />` as the last element inside `<body>`.
 
+Read
+[this doc](https://nextjs.org/docs/pages/building-your-application/routing/custom-document)
+and customize your Next.js document:
+
 ```jsx
-import Document, { Html, Head, Main, NextScript } from "next/document";
+// pages/_document.jsx (or .tsx)
+...
+<body id="__django_nextjs_body">
+  <div id="__django_nextjs_body_begin" />
+  <Main />
+  <NextScript />
+  <div id="__django_nextjs_body_end" />
+</body>
+...
+```
 
-// https://nextjs.org/docs/advanced-features/custom-document
-class MyDocument extends Document {
-  render() {
-    return (
-      <Html>
-        <Head />
-        <body id="__django_nextjs_body" dir="rtl">
-          <div id="__django_nextjs_body_begin" />
-          <Main />
-          <NextScript />
-          <div id="__django_nextjs_body_end" />
-        </body>
-      </Html>
-    );
-  }
-}
+If you are using Next.js 13+, you also need to
+[customize the root layout](https://nextjs.org/docs/app/api-reference/file-conventions/layout)
+in `app` directory:
 
-export default MyDocument;
+```jsx
+// app/layout.jsx (or .tsx)
+...
+<body id="__django_nextjs_body" className={inter.className}>
+  <div id="__django_nextjs_body_begin" />
+  {children}
+  <div id="__django_nextjs_body_end" />
+</body>
+...
 ```
 
 Write a django template that extends `django_nextjs/document_base.html`:
@@ -179,16 +195,18 @@ Write a django template that extends `django_nextjs/document_base.html`:
 
 
 {% block head %}
-  ... the content you want to add to the beginning of <head> tag ...
+  <!-- ... the content you want to place at the beginning of "head" tag ... -->
   {{ block.super }}
-  ... the content you want to add to the end of <head> tag ...
+  <!-- ... the content you want to place at the end of "head" tag ... -->
 {% endblock %}
 
 
 {% block body %}
-  ... the content you want to add to the beginning of <body> tag ...
+  ... the content you want to place at the beginning of "body" tag ...
+  ... e.g. include the navbar template ...
   {{ block.super }}
-  ... the content you want to add to the end of <body> tag ...
+  ... the content you want to place at the end of "body" tag ...
+  ... e.g. include the footer template ...
 {% endblock %}
 ```
 
@@ -241,7 +259,6 @@ The URL of Next.js server (started by `npm run dev` or `npm run start`)
 - [comment on StackOverflow]
 
 [comment on stackoverflow]: https://stackoverflow.com/questions/54252943/is-there-a-way-to-integrate-django-with-next-js#comment110078700_54252943
-[customize next's document]: https://nextjs.org/docs/advanced-features/custom-document
 
 ## License
 

@@ -192,11 +192,11 @@ Write a django template that extends `django_nextjs/document_base.html`:
 
 
 {% block body %}
-  ... the content you want to place at the beginning of "body" tag ...
-  ... e.g. include the navbar template ...
+  <!-- ... the content you want to place at the beginning of "body" tag ... -->
+  <!-- ... e.g. include the navbar template ... -->
   {{ block.super }}
-  ... the content you want to place at the end of "body" tag ...
-  ... e.g. include the footer template ...
+  <!-- ... the content you want to place at the end of "body" tag ... -->
+  <!-- ... e.g. include the footer template ... -->
 {% endblock %}
 ```
 

@@ -42,76 +42,78 @@ From a [comment on StackOverflow]:
 
 - Add `django_nextjs.apps.DjangoNextJSConfig` to `INSTALLED_APPS`.
 
-- **In Development Environment:**
+- Set up Next.js URLs depending on your environment.
 
-  - If you're serving your site under ASGI during development,
-    use [Django Channels](https://channels.readthedocs.io/en/stable/) and
-    add `NextJSProxyHttpConsumer`, `NextJSProxyWebsocketConsumer` to `asgi.py` like the following example.
+### Setup Next.js URLs (Development Environment)
 
-    **Note:** We recommend this method,
-    because it is required for [fast refresh](https://nextjs.org/docs/architecture/fast-refresh) (hot module replacement) to work properly in Nextjs 12+.
+If you're serving your site under ASGI during development,
+use [Django Channels](https://channels.readthedocs.io/en/stable/) and
+add `NextJSProxyHttpConsumer`, `NextJSProxyWebsocketConsumer` to `asgi.py` like the following example.
 
-    ```python
-    import os
+**Note:** We recommend using ASGI and Django Channels,
+because it is required for [fast refresh](https://nextjs.org/docs/architecture/fast-refresh) (hot module replacement) to work properly in Nextjs 12+.
 
-    from django.core.asgi import get_asgi_application
-    from django.urls import re_path, path
+```python
+import os
 
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
-    django_asgi_app = get_asgi_application()
+from django.core.asgi import get_asgi_application
+from django.urls import re_path, path
 
-    from channels.auth import AuthMiddlewareStack
-    from channels.routing import ProtocolTypeRouter, URLRouter
-    from django_nextjs.proxy import NextJSProxyHttpConsumer, NextJSProxyWebsocketConsumer
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
+django_asgi_app = get_asgi_application()
 
-    from django.conf import settings
+from channels.auth import AuthMiddlewareStack
+from channels.routing import ProtocolTypeRouter, URLRouter
+from django_nextjs.proxy import NextJSProxyHttpConsumer, NextJSProxyWebsocketConsumer
 
-    # put your custom routes here if you need
-    http_routes = [re_path(r"", django_asgi_app)]
-    websocket_routers = []
+from django.conf import settings
 
-    if settings.DEBUG:
-        http_routes.insert(0, re_path(r"^(?:_next|__next|next).*", NextJSProxyHttpConsumer.as_asgi()))
-        websocket_routers.insert(0, path("_next/webpack-hmr", NextJSProxyWebsocketConsumer.as_asgi()))
+# put your custom routes here if you need
+http_routes = [re_path(r"", django_asgi_app)]
+websocket_routers = []
+
+if settings.DEBUG:
+    http_routes.insert(0, re_path(r"^(?:_next|__next|next).*", NextJSProxyHttpConsumer.as_asgi()))
+    websocket_routers.insert(0, path("_next/webpack-hmr", NextJSProxyWebsocketConsumer.as_asgi()))
 
 
-    application = ProtocolTypeRouter(
-        {
-            # Django's ASGI application to handle traditional HTTP and websocket requests.
-            "http": URLRouter(http_routes),
-            "websocket": AuthMiddlewareStack(URLRouter(websocket_routers)),
-            # ...
-        }
-    )
-    ```
-
-  - Otherwise (if serving under WSGI during development), add the following to the beginning of `urls.py`:
-
-    ```python
-    path("", include("django_nextjs.urls"))
-    ```
-
-    **Warning:** If you are serving under ASGI, do NOT add this
-    to your `urls.py`. It may cause deadlocks.
-
-- **In Production:**
-
-  - Use a reverse proxy like nginx:
-
-    | URL                 | Action                                     |
-    | ------------------- | ------------------------------------------ |
-    | `/_next/static/...` | Serve `NEXTJS_PATH/.next/static` directory |
-    | `/_next/...`        | Proxy to `http://localhost:3000`           |
-    | `/next/...`         | Serve `NEXTJS_PATH/public/next` directory  |
-
-    Pass `x-real-ip` header when proxying `/_next/`:
-
-    ```conf
-    location /_next/ {
-        proxy_set_header  x-real-ip $remote_addr;
-        proxy_pass  http://127.0.0.1:3000;
+application = ProtocolTypeRouter(
+    {
+        # Django's ASGI application to handle traditional HTTP and websocket requests.
+        "http": URLRouter(http_routes),
+        "websocket": AuthMiddlewareStack(URLRouter(websocket_routers)),
+        # ...
     }
-    ```
+)
+```
+
+Otherwise (if serving under WSGI during development), add the following to the beginning of `urls.py`:
+
+```python
+path("", include("django_nextjs.urls"))
+```
+
+**Warning:** If you are serving under ASGI, do NOT add this
+to your `urls.py`. It may cause deadlocks.
+
+### Setup Next.js URLs (Production Environment)
+
+In production, use a reverse proxy like Nginx or Caddy:
+
+| URL                 | Action                                     |
+| ------------------- | ------------------------------------------ |
+| `/_next/static/...` | Serve `NEXTJS_PATH/.next/static` directory |
+| `/_next/...`        | Proxy to `http://localhost:3000`           |
+| `/next/...`         | Serve `NEXTJS_PATH/public/next` directory  |
+
+Pass `x-real-ip` header when proxying `/_next/`. Example config for Nginx:
+
+```conf
+location /_next/ {
+    proxy_set_header  x-real-ip $remote_addr;
+    proxy_pass  http://127.0.0.1:3000;
+}
+```
 
 ## Usage
 
@@ -200,11 +202,11 @@ Write a django template that extends `django_nextjs/document_base.html`:
 
 
 {% block body %}
-  <!-- ... the content you want to place at the beginning of "body" tag ... -->
-  <!-- ... e.g. include the navbar template ... -->
+  ... the content you want to place at the beginning of "body" tag ...
+  ... e.g. include the navbar template ...
   {{ block.super }}
-  <!-- ... the content you want to place at the end of "body" tag ... -->
-  <!-- ... e.g. include the footer template ... -->
+  ... the content you want to place at the end of "body" tag ...
+  ... e.g. include the footer template ...
 {% endblock %}
 ```
 

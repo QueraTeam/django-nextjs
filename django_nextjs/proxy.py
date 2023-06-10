@@ -1,8 +1,8 @@
 import asyncio
 import re
+import urllib.request
 
 import aiohttp
-import requests
 import websockets
 from channels.generic.http import AsyncHttpConsumer
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -89,15 +89,17 @@ class NextJSProxyView(View):
     def get(self, request):
         url = NEXTJS_SERVER_URL + request.path + "?" + request.GET.urlencode()
 
-        if request.headers.get("Accept", None) == "text/event-stream":
-            response = requests.get(url, stream=True, cookies=request.COOKIES)
-            ret = http.StreamingHttpResponse(response.iter_content())
-        else:
-            response = requests.get(url, cookies=request.COOKIES)
-            ret = http.HttpResponse(
-                content=bytes(response.content),
-            )
+        urllib_response = urllib.request.urlopen(
+            urllib.request.Request(url, headers={"Cookie": request.headers.get("Cookie")})
+        )
 
-        if "Content-Type" in response.headers:
-            ret["Content-Type"] = response.headers["Content-Type"]
-        return ret
+        return http.StreamingHttpResponse(
+            self._iter_content(urllib_response), headers={"Content-Type": urllib_response.headers.get("Content-Type")}
+        )
+
+    def _iter_content(self, urllib_response):
+        while True:
+            chunk = urllib_response.read(urllib_response.length or 1)
+            if not chunk:
+                break
+            yield chunk

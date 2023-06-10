@@ -78,13 +78,11 @@ async def _render_nextjs_page_to_string_async(
         cookies=_get_nextjs_request_cookies(request),
         headers=_get_nextjs_request_headers(request, headers),
     ) as session:
-        async with session.get(
-            f"{base_url}/{page_path}", params=params, allow_redirects=allow_redirects
-        ) as response:
+        async with session.get(f"{base_url}/{page_path}", params=params, allow_redirects=allow_redirects) as response:
             html = await response.text()
             response_headers = _get_nextjs_response_headers(response.headers)
 
-    # Apply template rendering if provided template_name
+    # Apply template rendering (HTML customization) if template_name is provided
     if template_name:
         render_context = _get_render_context(html, context)
         if render_context is not None:

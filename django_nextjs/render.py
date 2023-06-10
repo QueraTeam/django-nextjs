@@ -1,3 +1,4 @@
+import warnings
 from typing import Dict, Tuple, Union
 from urllib.parse import quote
 
@@ -60,7 +61,7 @@ def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
     return {key: headers[key] for key in useful_header_keys if key in headers}
 
 
-async def _render_nextjs_page_to_string_async(
+async def _render_nextjs_page_to_string(
     request: HttpRequest,
     template_name: str = "",
     context: Union[Dict, None] = None,
@@ -92,7 +93,7 @@ async def _render_nextjs_page_to_string_async(
     return html, response.status, response_headers
 
 
-async def render_nextjs_page_to_string_async(
+async def render_nextjs_page_to_string(
     request: HttpRequest,
     template_name: str = "",
     context: Union[Dict, None] = None,
@@ -101,7 +102,7 @@ async def render_nextjs_page_to_string_async(
     headers: Union[Dict, None] = None,
     nextjs_server_url: str = "",
 ):
-    html, _, _ = await _render_nextjs_page_to_string_async(
+    html, _, _ = await _render_nextjs_page_to_string(
         request,
         template_name,
         context,
@@ -113,7 +114,7 @@ async def render_nextjs_page_to_string_async(
     return html
 
 
-async def render_nextjs_page_async(
+async def render_nextjs_page(
     request: HttpRequest,
     template_name: str = "",
     context: Union[Dict, None] = None,
@@ -124,7 +125,7 @@ async def render_nextjs_page_async(
     headers: Union[Dict, None] = None,
     nextjs_server_url: str = "",
 ):
-    content, status, response_headers = await _render_nextjs_page_to_string_async(
+    content, status, response_headers = await _render_nextjs_page_to_string(
         request,
         template_name,
         context,
@@ -137,5 +138,45 @@ async def render_nextjs_page_async(
     return HttpResponse(content, content_type, final_status, headers=response_headers)
 
 
-render_nextjs_page_to_string_sync = async_to_sync(render_nextjs_page_to_string_async)
-render_nextjs_page_sync = async_to_sync(render_nextjs_page_async)
+async def render_nextjs_page_to_string_async(*args, **kwargs):
+    warnings.warn(
+        (
+            "render_nextjs_page_to_string_async is deprecated and will be removed in a future release. "
+            "Use render_nextjs_page_to_string instead."
+        ),
+        DeprecationWarning,
+    )
+    return await render_nextjs_page_to_string(*args, **kwargs)
+
+
+async def render_nextjs_page_async(*args, **kwargs):
+    warnings.warn(
+        (
+            "render_nextjs_page_async is deprecated and will be removed in a future release. "
+            "Use render_nextjs_page instead."
+        ),
+        DeprecationWarning,
+    )
+    return await render_nextjs_page(*args, **kwargs)
+
+
+def render_nextjs_page_to_string_sync(*args, **kwargs):
+    warnings.warn(
+        (
+            "render_nextjs_page_to_string_sync is deprecated and will be removed in a future release. "
+            "Use render_nextjs_page_to_string in an async view, or use async_to_sync(render_nextjs_page_to_string)."
+        ),
+        DeprecationWarning,
+    )
+    return async_to_sync(render_nextjs_page_to_string)(*args, **kwargs)
+
+
+def render_nextjs_page_sync(*args, **kwargs):
+    warnings.warn(
+        (
+            "render_nextjs_page_sync is deprecated and will be removed in a future release. "
+            "Use render_nextjs_page in an async view, or use async_to_sync(render_nextjs_page)."
+        ),
+        DeprecationWarning,
+    )
+    return async_to_sync(render_nextjs_page)(*args, **kwargs)

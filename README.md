@@ -119,24 +119,14 @@ $ npm run start
 ```
 
 Develop your pages in Next.js.
-Write a django URL and view for each page like this:
+Write a django URL and an async view for each page like this:
 
 ```python
-# If you're using django channels
 from django.http import HttpResponse
-from django_nextjs.render import render_nextjs_page_async
+from django_nextjs.render import render_nextjs_page
 
 async def jobs(request):
-    return await render_nextjs_page_async(request)
-```
-
-```python
-# If you're not using django channels
-from django.http import HttpResponse
-from django_nextjs.render import render_nextjs_page_sync
-
-def jobs(request):
-    return render_nextjs_page_sync(request)
+    return await render_nextjs_page(request)
 ```
 
 ## Customizing the HTML Response
@@ -210,18 +200,11 @@ Write a django template that extends `django_nextjs/document_base.html`:
 {% endblock %}
 ```
 
-Pass the template name to `render_nextjs_page_async` or `render_nextjs_page_sync`:
+Pass the template name to `render_nextjs_page`:
 
 ```python
-# If you're using django channels
 async def jobs(request):
-    return await render_nextjs_page_async(request, "path/to/template.html")
-```
-
-```python
-# If you're not using django channels
-def jobs(request):
-    return render_nextjs_page_sync(request, "path/to/template.html")
+    return await render_nextjs_page(request, "path/to/template.html")
 ```
 
 ## Notes

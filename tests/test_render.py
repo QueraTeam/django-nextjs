@@ -4,7 +4,7 @@ import pytest
 from django.test import RequestFactory
 from django.utils.datastructures import MultiValueDict
 
-from django_nextjs.render import _get_render_context, render_nextjs_page_async
+from django_nextjs.render import _get_render_context, render_nextjs_page
 
 
 def test_get_render_context_empty_html():
@@ -47,7 +47,7 @@ def test_get_render_context_html_with_sections_and_content():
 
 
 @pytest.mark.asyncio
-async def test_render_nextjs_page_async(rf: RequestFactory):
+async def test_render_nextjs_page(rf: RequestFactory):
     path = "random/path"
     params = MultiValueDict({"name": ["Adrian", "Simon"], "position": ["Developer"]})
     request = rf.get(f"/{path}", data=params)
@@ -61,7 +61,7 @@ async def test_render_nextjs_page_async(rf: RequestFactory):
             mock_get.return_value.__aenter__.return_value.headers = {"Location": "target_value", "unimportant": ""}
             mock_session.return_value.__aenter__ = AsyncMock(return_value=MagicMock(get=mock_get))
 
-            http_response = await render_nextjs_page_async(request, allow_redirects=True, headers={"extra": "headers"})
+            http_response = await render_nextjs_page(request, allow_redirects=True, headers={"extra": "headers"})
 
             assert http_response.content == nextjs_response.encode()
             assert http_response.status_code == 200

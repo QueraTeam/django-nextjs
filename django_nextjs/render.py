@@ -69,9 +69,7 @@ async def _render_nextjs_page_to_string_async(
     headers: Union[Dict, None] = None,
     nextjs_server_url: str = "",
 ) -> Tuple[str, int, Dict[str, str]]:
-    if not nextjs_server_url:
-        nextjs_server_url = NEXTJS_SERVER_URL
-
+    base_url = nextjs_server_url or NEXTJS_SERVER_URL
     page_path = quote(request.path_info.lstrip("/"))
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
@@ -81,7 +79,7 @@ async def _render_nextjs_page_to_string_async(
         headers=_get_nextjs_request_headers(request, headers),
     ) as session:
         async with session.get(
-            f"{nextjs_server_url}/{page_path}", params=params, allow_redirects=allow_redirects
+            f"{base_url}/{page_path}", params=params, allow_redirects=allow_redirects
         ) as response:
             html = await response.text()
             response_headers = _get_nextjs_response_headers(response.headers)

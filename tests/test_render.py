@@ -47,7 +47,7 @@ def test_get_render_context_html_with_sections_and_content():
 
 
 @pytest.mark.asyncio
-async def test_render_nextjs_page_to_string_async(rf: RequestFactory):
+async def test_render_nextjs_page_async(rf: RequestFactory):
     path = "random/path"
     params = MultiValueDict({"name": ["Adrian", "Simon"], "position": ["Developer"]})
     request = rf.get(f"/{path}", data=params)

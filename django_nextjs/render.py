@@ -68,9 +68,7 @@ async def _render_nextjs_page_to_string(
     using: Union[str, None] = None,
     allow_redirects: bool = False,
     headers: Union[Dict, None] = None,
-    nextjs_server_url: str = "",
 ) -> Tuple[str, int, Dict[str, str]]:
-    base_url = nextjs_server_url or NEXTJS_SERVER_URL
     page_path = quote(request.path_info.lstrip("/"))
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
@@ -79,7 +77,9 @@ async def _render_nextjs_page_to_string(
         cookies=_get_nextjs_request_cookies(request),
         headers=_get_nextjs_request_headers(request, headers),
     ) as session:
-        async with session.get(f"{base_url}/{page_path}", params=params, allow_redirects=allow_redirects) as response:
+        async with session.get(
+            f"{NEXTJS_SERVER_URL}/{page_path}", params=params, allow_redirects=allow_redirects
+        ) as response:
             html = await response.text()
             response_headers = _get_nextjs_response_headers(response.headers)
 
@@ -100,7 +100,6 @@ async def render_nextjs_page_to_string(
     using: Union[str, None] = None,
     allow_redirects: bool = False,
     headers: Union[Dict, None] = None,
-    nextjs_server_url: str = "",
 ):
     html, _, _ = await _render_nextjs_page_to_string(
         request,
@@ -109,7 +108,6 @@ async def render_nextjs_page_to_string(
         using=using,
         allow_redirects=allow_redirects,
         headers=headers,
-        nextjs_server_url=nextjs_server_url,
     )
     return html
 
@@ -123,7 +121,6 @@ async def render_nextjs_page(
     using: Union[str, None] = None,
     allow_redirects: bool = False,
     headers: Union[Dict, None] = None,
-    nextjs_server_url: str = "",
 ):
     content, status, response_headers = await _render_nextjs_page_to_string(
         request,
@@ -132,7 +129,6 @@ async def render_nextjs_page(
         using=using,
         allow_redirects=allow_redirects,
         headers=headers,
-        nextjs_server_url=nextjs_server_url,
     )
     final_status = status if override_status is None else override_status
     return HttpResponse(content, content_type, final_status, headers=response_headers)

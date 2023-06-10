@@ -4,6 +4,7 @@ import pytest
 from django.test import RequestFactory
 from django.utils.datastructures import MultiValueDict
 
+from django_nextjs.app_settings import NEXTJS_SERVER_URL
 from django_nextjs.render import _get_render_context, render_nextjs_page
 
 
@@ -52,7 +53,6 @@ async def test_render_nextjs_page(rf: RequestFactory):
     params = MultiValueDict({"name": ["Adrian", "Simon"], "position": ["Developer"]})
     request = rf.get(f"/{path}", data=params)
     nextjs_response = "<html><head></head><body></body></html>"
-    nextjs_server_url = "http://127.0.0.1:3000"
 
     with patch("aiohttp.ClientSession") as mock_session:
         with patch("aiohttp.ClientSession.get") as mock_get:
@@ -71,7 +71,7 @@ async def test_render_nextjs_page(rf: RequestFactory):
             # Arguments passed to aiohttp.ClientSession.get
             args, kwargs = mock_get.call_args
             url = args[0]
-            assert url == f"{nextjs_server_url}/{path}"
+            assert url == f"{NEXTJS_SERVER_URL}/{path}"
             assert [(k, v) for k in params.keys() for v in params.getlist(k)] == kwargs["params"]
             assert kwargs["allow_redirects"] is True
 

@@ -42,68 +42,88 @@ From a [comment on StackOverflow]:
 
 - Add `django_nextjs.apps.DjangoNextJSConfig` to `INSTALLED_APPS`.
 
-- **In Development Environment:**
+- Set up Next.js URLs depending on your environment.
 
-  - If you're using django channels (after Nextjs v12 you need this to be able to use hot-reload), add `NextJSProxyHttpConsumer` and `NextJSProxyWebsocketConsumer` to `asgi.py`:
+### Setup Next.js URLs (Development Environment)
 
-    ```python
-    import os
+If you're serving your site under ASGI during development,
+use [Django Channels](https://channels.readthedocs.io/en/stable/) and
+add `NextJSProxyHttpConsumer`, `NextJSProxyWebsocketConsumer` to `asgi.py` like the following example.
 
-    from django.core.asgi import get_asgi_application
-    from django.urls import re_path, path
+**Note:** We recommend using ASGI and Django Channels,
+because it is required for [fast refresh](https://nextjs.org/docs/architecture/fast-refresh) (hot module replacement) to work properly in Nextjs 12+.
 
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
-    django_asgi_app = get_asgi_application()
+```python
+import os
 
-    from channels.auth import AuthMiddlewareStack
-    from channels.routing import ProtocolTypeRouter, URLRouter
-    from django_nextjs.proxy import NextJSProxyHttpConsumer, NextJSProxyWebsocketConsumer
+from django.core.asgi import get_asgi_application
+from django.urls import re_path, path
 
-    from django.conf import settings
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
+django_asgi_app = get_asgi_application()
 
-    # put your custom routes here if you need
-    http_routes = [re_path(r"", django_asgi_app)]
-    websocket_routers = []
+from channels.auth import AuthMiddlewareStack
+from channels.routing import ProtocolTypeRouter, URLRouter
+from django_nextjs.proxy import NextJSProxyHttpConsumer, NextJSProxyWebsocketConsumer
 
-    if settings.DEBUG:
-        http_routes.insert(0, re_path(r"^(?:_next|__next|next).*", NextJSProxyHttpConsumer.as_asgi()))
-        websocket_routers.insert(0, path("_next/webpack-hmr", NextJSProxyWebsocketConsumer.as_asgi()))
+from django.conf import settings
+
+# put your custom routes here if you need
+http_routes = [re_path(r"", django_asgi_app)]
+websocket_routers = []
+
+if settings.DEBUG:
+    http_routes.insert(0, re_path(r"^(?:_next|__next|next).*", NextJSProxyHttpConsumer.as_asgi()))
+    websocket_routers.insert(0, path("_next/webpack-hmr", NextJSProxyWebsocketConsumer.as_asgi()))
 
 
-    application = ProtocolTypeRouter(
-        {
-            # Django's ASGI application to handle traditional HTTP and websocket requests.
-            "http": URLRouter(http_routes),
-            "websocket": AuthMiddlewareStack(URLRouter(websocket_routers)),
-            # ...
-        }
-    )
-    ```
-
-  - Otherwise, add the following to the beginning of `urls.py`:
-
-    ```python
-    path("", include("django_nextjs.urls"))
-    ```
-
-- **In Production:**
-
-  - Use a reverse proxy like nginx:
-
-    | URL                 | Action                                     |
-    | ------------------- | ------------------------------------------ |
-    | `/_next/static/...` | Serve `NEXTJS_PATH/.next/static` directory |
-    | `/_next/...`        | Proxy to `http://localhost:3000`           |
-    | `/next/...`         | Serve `NEXTJS_PATH/public/next` directory  |
-
-    Pass `x-real-ip` header when proxying `/_next/`:
-
-    ```conf
-    location /_next/ {
-        proxy_set_header  x-real-ip $remote_addr;
-        proxy_pass  http://127.0.0.1:3000;
+application = ProtocolTypeRouter(
+    {
+        # Django's ASGI application to handle traditional HTTP and websocket requests.
+        "http": URLRouter(http_routes),
+        "websocket": AuthMiddlewareStack(URLRouter(websocket_routers)),
+        # ...
     }
-    ```
+)
+```
+
+Otherwise (if serving under WSGI during development), add the following to the beginning of `urls.py`:
+
+```python
+path("", include("django_nextjs.urls"))
+```
+
+**Warning:** If you are serving under ASGI, do NOT add this
+to your `urls.py`. It may cause deadlocks.
+
+### Setup Next.js URLs (Production Environment)
+
+In production, use a reverse proxy like Nginx or Caddy:
+
+| URL                 | Action                                     |
+| ------------------- | ------------------------------------------ |
+| `/_next/static/...` | Serve `NEXTJS_PATH/.next/static` directory |
+| `/_next/...`        | Proxy to `http://localhost:3000`           |
+| `/next/...`         | Serve `NEXTJS_PATH/public/next` directory  |
+
+Pass `x-real-ip` header when proxying `/_next/`. Example config for Nginx:
+
+```conf
+location /_next/static/ {
+    alias NEXTJS_PATH/.next/static/;
+    expires max;
+    add_header Cache-Control "public";
+}
+location /_next/ {
+    proxy_set_header  x-real-ip $remote_addr;
+    proxy_pass  http://127.0.0.1:3000;
+}
+location /next/ {
+    alias NEXTJS_PATH/public/next/;
+    expires max;
+    add_header Cache-Control "public";
+}
+```
 
 ## Usage
 
@@ -119,58 +139,66 @@ $ npm run start
 ```
 
 Develop your pages in Next.js.
-Write a django URL and view for each page like this:
+Write a django URL and an async view for each page like this:
 
 ```python
-# If you're using django channels
 from django.http import HttpResponse
-from django_nextjs.render import render_nextjs_page_async
+from django_nextjs.render import render_nextjs_page
 
 async def jobs(request):
-    return await render_nextjs_page_async(request)
+    return await render_nextjs_page(request)
 ```
 
-```python
-# If you're not using django channels
-from django.http import HttpResponse
-from django_nextjs.render import render_nextjs_page_sync
+## Customizing the HTML Response
 
-def jobs(request):
-    return render_nextjs_page_sync(request)
-```
+You can modify the HTML code that Next.js returns in your Django code.
 
-## Customizing Document
+Avoiding duplicate code for the navbar and footer is a common use case
+for this if you are using both Next.js and Django templates.
+Without it, you would have to write and maintain two separate versions
+of your navbar and footer (a Django template version and a Next.js version).
+However, you can simply create a Django template for your navbar and insert its code
+at the beginning of `<body>` tag returned from Next.js.
 
-If you want to customize the HTML document (e.g. add header or footer), read this section.
-
-You need to [customize Next's document]:
+To enable this feature, you need to customize the document and root layout
+in Next.js and make the following adjustments:
 
 - Add `id="__django_nextjs_body"` as the first attribute of `<body>` element.
 - Add `<div id="__django_nextjs_body_begin" />` as the first element inside `<body>`.
 - Add `<div id="__django_nextjs_body_end" />` as the last element inside `<body>`.
 
+NOTE: Currently HTML customization is not working with [app router](https://nextjs.org/docs/app) (Next.js 13+).
+
+Read
+[this doc](https://nextjs.org/docs/pages/building-your-application/routing/custom-document)
+and customize your Next.js document:
+
 ```jsx
-import Document, { Html, Head, Main, NextScript } from "next/document";
-
-// https://nextjs.org/docs/advanced-features/custom-document
-class MyDocument extends Document {
-  render() {
-    return (
-      <Html>
-        <Head />
-        <body id="__django_nextjs_body" dir="rtl">
-          <div id="__django_nextjs_body_begin" />
-          <Main />
-          <NextScript />
-          <div id="__django_nextjs_body_end" />
-        </body>
-      </Html>
-    );
-  }
-}
-
-export default MyDocument;
+// pages/_document.jsx (or .tsx)
+...
+<body id="__django_nextjs_body">
+  <div id="__django_nextjs_body_begin" />
+  <Main />
+  <NextScript />
+  <div id="__django_nextjs_body_end" />
+</body>
+...
 ```
+
+<!-- If you are using Next.js 13+, you also need to
+[customize the root layout](https://nextjs.org/docs/app/api-reference/file-conventions/layout)
+in `app` directory:
+
+```jsx
+// app/layout.jsx (or .tsx)
+...
+<body id="__django_nextjs_body" className={inter.className}>
+  <div id="__django_nextjs_body_begin" />
+  {children}
+  <div id="__django_nextjs_body_end" />
+</body>
+...
+``` -->
 
 Write a django template that extends `django_nextjs/document_base.html`:
 
@@ -179,31 +207,26 @@ Write a django template that extends `django_nextjs/document_base.html`:
 
 
 {% block head %}
-  ... the content you want to add to the beginning of <head> tag ...
+  <!-- ... the content you want to place at the beginning of "head" tag ... -->
   {{ block.super }}
-  ... the content you want to add to the end of <head> tag ...
+  <!-- ... the content you want to place at the end of "head" tag ... -->
 {% endblock %}
 
 
 {% block body %}
-  ... the content you want to add to the beginning of <body> tag ...
+  ... the content you want to place at the beginning of "body" tag ...
+  ... e.g. include the navbar template ...
   {{ block.super }}
-  ... the content you want to add to the end of <body> tag ...
+  ... the content you want to place at the end of "body" tag ...
+  ... e.g. include the footer template ...
 {% endblock %}
 ```
 
-Pass the template name to `render_nextjs_page_async` or `render_nextjs_page_sync`:
+Pass the template name to `render_nextjs_page`:
 
 ```python
-# If you're using django channels
 async def jobs(request):
-    return await render_nextjs_page_async(request, "path/to/template.html")
-```
-
-```python
-# If you're not using django channels
-def jobs(request):
-    return render_nextjs_page_sync(request, "path/to/template.html")
+    return await render_nextjs_page(request, "path/to/template.html")
 ```
 
 ## Notes
@@ -241,7 +264,6 @@ The URL of Next.js server (started by `npm run dev` or `npm run start`)
 - [comment on StackOverflow]
 
 [comment on stackoverflow]: https://stackoverflow.com/questions/54252943/is-there-a-way-to-integrate-django-with-next-js#comment110078700_54252943
-[customize next's document]: https://nextjs.org/docs/advanced-features/custom-document
 
 ## License
 

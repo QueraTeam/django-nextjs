@@ -15,7 +15,9 @@ dev_requirements = [
     "pytest>=7",
     "pytest-cov",
     "pytest-django",
+    "pytest-asyncio",
     "black",
+    "isort",
 ]
 
 setup(
@@ -30,7 +32,7 @@ setup(
     download_url="https://github.com/QueraTeam/django-nextjs",
     packages=find_packages(".", include=("django_nextjs", "django_nextjs.*")),
     include_package_data=True,
-    install_requires=["Django >= 3.2", "requests", "aiohttp", "channels", "websockets"],
+    install_requires=["Django >= 3.2", "aiohttp", "channels", "websockets"],
     extras_require={"dev": dev_requirements},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -39,10 +41,10 @@ setup(
         "Framework :: Django :: 3.2",
         "Framework :: Django :: 4.0",
         "Framework :: Django :: 4.1",
+        "Framework :: Django :: 4.2",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",

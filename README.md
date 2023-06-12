@@ -167,6 +167,8 @@ in Next.js and make the following adjustments:
 - Add `<div id="__django_nextjs_body_begin" />` as the first element inside `<body>`.
 - Add `<div id="__django_nextjs_body_end" />` as the last element inside `<body>`.
 
+NOTE: Currently HTML customization is not working with [app router](https://nextjs.org/docs/app) (Next.js 13+).
+
 Read
 [this doc](https://nextjs.org/docs/pages/building-your-application/routing/custom-document)
 and customize your Next.js document:
@@ -183,7 +185,7 @@ and customize your Next.js document:
 ...
 ```
 
-If you are using Next.js 13+, you also need to
+<!-- If you are using Next.js 13+, you also need to
 [customize the root layout](https://nextjs.org/docs/app/api-reference/file-conventions/layout)
 in `app` directory:
 
@@ -196,7 +198,7 @@ in `app` directory:
   <div id="__django_nextjs_body_end" />
 </body>
 ...
-```
+``` -->
 
 Write a django template that extends `django_nextjs/document_base.html`:
 

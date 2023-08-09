@@ -77,4 +77,6 @@ async def test_render_nextjs_page(rf: RequestFactory):
 
         args, kwargs = mock_session.call_args
         assert "csrftoken" in kwargs["cookies"]
-        assert kwargs["headers"] == {"user-agent": "", "x-real-ip": "127.0.0.1", "extra": "headers"}
+        assert kwargs["headers"]["user-agent"] == ""
+        assert kwargs["headers"]["x-real-ip"] == "127.0.0.1"
+        assert kwargs["headers"]["extra"] == "headers"

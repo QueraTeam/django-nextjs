@@ -49,15 +49,33 @@ def _get_nextjs_request_cookies(request: HttpRequest):
 
 
 def _get_nextjs_request_headers(request: HttpRequest, headers: Union[Dict, None] = None):
+    # These headers are used by NextJS to indicate if a request is expecting a full HTML
+    # response, or an RSC response.
+    server_component_header_names = [
+        "Rsc",
+        "Next-Router-State-Tree",
+        "Next-Router-Prefetch",
+        "Next-Url",
+        "Cookie",
+        "Accept-Encoding",
+    ]
+
+    server_component_headers = {}
+
+    for server_component_header in server_component_header_names:
+        if request.headers.get(server_component_header) is not None:
+            server_component_headers[server_component_header.lower()] = request.headers[server_component_header]
+
     return {
         "x-real-ip": request.headers.get("X-Real-Ip", "") or request.META.get("REMOTE_ADDR", ""),
         "user-agent": request.headers.get("User-Agent", ""),
+        **server_component_headers,
         **({} if headers is None else headers),
     }
 
 
 def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
-    useful_header_keys = ("Location",)
+    useful_header_keys = ("Location", "Vary", "Content-Type")
     return {key: headers[key] for key in useful_header_keys if key in headers}
 
 

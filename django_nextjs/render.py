@@ -74,8 +74,12 @@ def _get_nextjs_request_headers(request: HttpRequest, headers: Union[Dict, None]
     }
 
 
-def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
-    useful_header_keys = ("Location", "Vary", "Content-Type")
+def _get_nextjs_response_headers(headers: MultiMapping[str], include_content_type: bool = False) -> Dict:
+    useful_header_keys = ["Location", "Vary"]
+
+    if include_content_type:
+        useful_header_keys.append("Content-Type")
+
     return {key: headers[key] for key in useful_header_keys if key in headers}
 
 
@@ -86,6 +90,7 @@ async def _render_nextjs_page_to_string(
     using: Union[str, None] = None,
     allow_redirects: bool = False,
     headers: Union[Dict, None] = None,
+    include_content_type: bool = False,
 ) -> Tuple[str, int, Dict[str, str]]:
     page_path = quote(request.path_info.lstrip("/"))
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
@@ -99,7 +104,7 @@ async def _render_nextjs_page_to_string(
             f"{NEXTJS_SERVER_URL}/{page_path}", params=params, allow_redirects=allow_redirects
         ) as response:
             html = await response.text()
-            response_headers = _get_nextjs_response_headers(response.headers)
+            response_headers = _get_nextjs_response_headers(response.headers, include_content_type)
 
     # Apply template rendering (HTML customization) if template_name is provided
     if template_name:
@@ -147,6 +152,7 @@ async def render_nextjs_page(
         using=using,
         allow_redirects=allow_redirects,
         headers=headers,
+        include_content_type=content_type is None,
     )
     final_status = status if override_status is None else override_status
     return HttpResponse(content, content_type, final_status, headers=response_headers)

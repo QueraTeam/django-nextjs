@@ -2,14 +2,16 @@
 
 
 {% block head %}
-  <!-- ... the content you want to place at the beginning of "head" tag ... -->
+  <title>head</title>
   {{ block.super }}
-  <!-- ... the content you want to place at the end of "head" tag ... -->
+  <meta name="description" content="head">
 {% endblock %}
 
 
 {% block body %}
-  pre body django {{ request.path_info }}
+  <span>... the content you want to place at the beginning of "body" tag ...</span>
+  <span>... e.g. include the navbar template ...</span>
   {{ block.super }}
-  post body django {{ request.path_info }}
+  <span>... the content you want to place at the end of "body" tag ...</span>
+  <span>... e.g. include the footer template ...</span>
 {% endblock %}

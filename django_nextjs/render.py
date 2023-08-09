@@ -10,7 +10,6 @@ from django.http import HttpRequest, HttpResponse
 from django.middleware.csrf import get_token as get_csrf_token
 from django.template.loader import render_to_string
 from multidict import MultiMapping
-
 from .app_settings import NEXTJS_SERVER_URL
 from .utils import filter_mapping_obj
 
@@ -87,6 +86,38 @@ def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
     )
 
 
+async def _render_extended_template(
+    template_name: str,
+    extra_context: Union[Dict, None] = None,
+    request: Union[HttpRequest, None] = None,
+    using: Union[str, None] = None,
+):
+    """
+    Split customization template to usable parts.
+    """
+    SEPARATOR = "____DJANGO_NEXTJS_SEPARATOR____"
+    context = {
+        **(extra_context or {}),
+        "django_nextjs__": {
+            "section2": SEPARATOR,
+            "section3": SEPARATOR,
+            "section4": SEPARATOR,
+        },
+    }
+
+    html = await sync_to_async(render_to_string)(template_name, context=context, request=request, using=using)
+
+    # Can't send "\n" in HTTP headers
+    items = html.replace("\n", " ").split(SEPARATOR)
+
+    if len(items) < 4:
+        raise ValueError(
+            "You should put {{ block.super }} in your head and body blocks of" + f" '{template_name}' template."
+        )
+
+    return {"dj_pre_head": items[0], "dj_post_head": items[1], "dj_pre_body": items[2], "dj_post_body": items[3]}
+
+
 async def _render_nextjs_page_to_string(
     request: HttpRequest,
     template_name: str = "",
@@ -98,10 +129,16 @@ async def _render_nextjs_page_to_string(
     page_path = quote(request.path_info.lstrip("/"))
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
+    rendered_template = (
+        await _render_extended_template(template_name=template_name, request=request, using=using)
+        if template_name
+        else {}
+    )
+
     # Get HTML from Next.js server
     async with aiohttp.ClientSession(
         cookies=_get_nextjs_request_cookies(request),
-        headers=_get_nextjs_request_headers(request, headers),
+        headers=_get_nextjs_request_headers(request, {**(headers or {}), **rendered_template}),
     ) as session:
         async with session.get(
             f"{NEXTJS_SERVER_URL}/{page_path}", params=params, allow_redirects=allow_redirects

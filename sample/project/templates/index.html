@@ -1,0 +1,15 @@
+{% extends "django_nextjs/document_base.html" %}
+
+
+{% block head %}
+  <!-- ... the content you want to place at the beginning of "head" tag ... -->
+  {{ block.super }}
+  <!-- ... the content you want to place at the end of "head" tag ... -->
+{% endblock %}
+
+
+{% block body %}
+  pre body django {{ request.path_info }}
+  {{ block.super }}
+  post body django {{ request.path_info }}
+{% endblock %}

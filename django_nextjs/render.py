@@ -138,7 +138,6 @@ async def render_nextjs_page(
     request: HttpRequest,
     template_name: str = "",
     context: Union[Dict, None] = None,
-    override_status: Union[int, None] = None,
     using: Union[str, None] = None,
     allow_redirects: bool = False,
     headers: Union[Dict, None] = None,
@@ -151,11 +150,7 @@ async def render_nextjs_page(
         allow_redirects=allow_redirects,
         headers=headers,
     )
-    return HttpResponse(
-        content=content,
-        status=status if override_status is None else override_status,
-        headers=response_headers,
-    )
+    return HttpResponse(content=content, status=status, headers=response_headers)
 
 
 async def render_nextjs_page_to_string_async(*args, **kwargs):

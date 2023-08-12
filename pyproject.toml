@@ -1,5 +1,5 @@
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "tests.settings"
+DJANGO_SETTINGS_MODULE = "tests.sample.djproject.settings"
 norecursedirs = ".git"
 django_find_project = false
 pythonpath = ["."]

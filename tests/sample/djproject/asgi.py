@@ -1,16 +1,16 @@
 import os
 
 from django.core.asgi import get_asgi_application
-from django.urls import re_path, path
+from django.urls import path, re_path
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djproject.settings")
 django_asgi_app = get_asgi_application()
 
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
-from django_nextjs.proxy import NextJSProxyHttpConsumer, NextJSProxyWebsocketConsumer
-
 from django.conf import settings
+
+from django_nextjs.proxy import NextJSProxyHttpConsumer, NextJSProxyWebsocketConsumer
 
 # put your custom routes here if you need
 http_routes = [re_path(r"", django_asgi_app)]

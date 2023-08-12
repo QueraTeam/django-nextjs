@@ -16,6 +16,7 @@ dev_requirements = [
     "pytest-cov",
     "pytest-django",
     "pytest-asyncio",
+    "daphne",  # used in tests
     "black",
     "isort",
 ]

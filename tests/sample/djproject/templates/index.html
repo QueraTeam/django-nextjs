@@ -1,0 +1,15 @@
+{% extends "django_nextjs/document_base.html" %}
+
+
+{% block head %}
+  <title>head</title>
+  {{ block.super }}
+  <meta name="description" content="head">
+{% endblock %}
+
+
+{% block body %}
+  <span>pre_body_{{ request.path_info }}</span>
+  {{ block.super }}
+  <span>post_body_{{ request.path_info }}</span>
+{% endblock %}

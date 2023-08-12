@@ -10,6 +10,7 @@ from django.http import HttpRequest, HttpResponse
 from django.middleware.csrf import get_token as get_csrf_token
 from django.template.loader import render_to_string
 from multidict import MultiMapping
+
 from .app_settings import NEXTJS_SERVER_URL
 from .utils import filter_mapping_obj
 

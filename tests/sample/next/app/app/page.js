@@ -4,7 +4,9 @@ export default function Home() {
   return (
     <div>
       <div>/app</div>
-      <Link href="/app/second">Go To /app/second</Link>
+      <Link href="/app/second" id="2">
+        /app/second
+      </Link>
     </div>
   );
 }

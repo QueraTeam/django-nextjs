@@ -1,4 +1,5 @@
 import warnings
+from http.cookies import Morsel
 from typing import Dict, Tuple, Union
 from urllib.parse import quote
 
@@ -12,6 +13,8 @@ from multidict import MultiMapping
 
 from .app_settings import NEXTJS_SERVER_URL
 from .utils import filter_mapping_obj
+
+morsel = Morsel()
 
 
 def _get_render_context(html: str, extra_context: Union[Dict, None] = None):
@@ -46,7 +49,8 @@ def _get_nextjs_request_cookies(request: HttpRequest):
     (i.e. dont use HTTP unsafe methods or GraphQL mutations).
     https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability
     """
-    return {**request.COOKIES, settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
+    unreserved_cookies = {k: v for k, v in request.COOKIES.items() if not morsel.isReservedKey(k)}
+    return {**unreserved_cookies, settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
 
 
 def _get_nextjs_request_headers(request: HttpRequest, headers: Union[Dict, None] = None):

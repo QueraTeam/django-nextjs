@@ -106,7 +106,7 @@ In production, use a reverse proxy like Nginx or Caddy:
 | `/_next/...`        | Proxy to `http://localhost:3000`           |
 | `/next/...`         | Serve `NEXTJS_PATH/public/next` directory  |
 
-Pass `x-real-ip` header when proxying `/_next/`. Example config for Nginx:
+Example config for Nginx:
 
 ```conf
 location /_next/static/ {
@@ -115,8 +115,11 @@ location /_next/static/ {
     add_header Cache-Control "public";
 }
 location /_next/ {
-    proxy_set_header  x-real-ip $remote_addr;
     proxy_pass  http://127.0.0.1:3000;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
 }
 location /next/ {
     alias NEXTJS_PATH/public/next/;

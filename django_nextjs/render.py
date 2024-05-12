@@ -1,10 +1,9 @@
-import warnings
 from http.cookies import Morsel
 from typing import Dict, Tuple, Union
 from urllib.parse import quote
 
 import aiohttp
-from asgiref.sync import async_to_sync, sync_to_async
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.middleware.csrf import get_token as get_csrf_token
@@ -155,47 +154,3 @@ async def render_nextjs_page(
         headers=headers,
     )
     return HttpResponse(content=content, status=status, headers=response_headers)
-
-
-async def render_nextjs_page_to_string_async(*args, **kwargs):
-    warnings.warn(
-        (
-            "render_nextjs_page_to_string_async is deprecated and will be removed in a future release. "
-            "Use render_nextjs_page_to_string instead."
-        ),
-        DeprecationWarning,
-    )
-    return await render_nextjs_page_to_string(*args, **kwargs)
-
-
-async def render_nextjs_page_async(*args, **kwargs):
-    warnings.warn(
-        (
-            "render_nextjs_page_async is deprecated and will be removed in a future release. "
-            "Use render_nextjs_page instead."
-        ),
-        DeprecationWarning,
-    )
-    return await render_nextjs_page(*args, **kwargs)
-
-
-def render_nextjs_page_to_string_sync(*args, **kwargs):
-    warnings.warn(
-        (
-            "render_nextjs_page_to_string_sync is deprecated and will be removed in a future release. "
-            "Use render_nextjs_page_to_string in an async view, or use async_to_sync(render_nextjs_page_to_string)."
-        ),
-        DeprecationWarning,
-    )
-    return async_to_sync(render_nextjs_page_to_string)(*args, **kwargs)
-
-
-def render_nextjs_page_sync(*args, **kwargs):
-    warnings.warn(
-        (
-            "render_nextjs_page_sync is deprecated and will be removed in a future release. "
-            "Use render_nextjs_page in an async view, or use async_to_sync(render_nextjs_page)."
-        ),
-        DeprecationWarning,
-    )
-    return async_to_sync(render_nextjs_page)(*args, **kwargs)

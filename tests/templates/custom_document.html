@@ -1,0 +1,10 @@
+{% extends "django_nextjs/document_base.html" %}
+{% block head %}
+  before_head
+  {{ block.super }}
+  after_head
+{% endblock %}
+
+{% block body %}
+  {{ block.super }}
+{% endblock %}

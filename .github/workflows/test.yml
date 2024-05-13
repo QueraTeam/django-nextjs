@@ -37,4 +37,4 @@ jobs:
           pip install -e ".[dev]"
       - name: Run tests
         run: |
-          py.test --cov
+          pytest --cov

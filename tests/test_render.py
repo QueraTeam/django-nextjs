@@ -5,7 +5,8 @@ from django.test import RequestFactory
 from django.utils.datastructures import MultiValueDict
 
 from django_nextjs.app_settings import NEXTJS_SERVER_URL
-from django_nextjs.render import _get_render_context, render_nextjs_page
+from django_nextjs.render import _get_render_context, render_nextjs_page_to_string
+from django_nextjs.views import nextjs_page
 
 
 def test_get_render_context_empty_html():
@@ -48,7 +49,7 @@ def test_get_render_context_html_with_sections_and_content():
 
 
 @pytest.mark.asyncio
-async def test_render_nextjs_page(rf: RequestFactory):
+async def test_nextjs_page(rf: RequestFactory):
     path = "random/path"
     params = MultiValueDict({"name": ["Adrian", "Simon"], "position": ["Developer"]})
     request = rf.get(f"/{path}", data=params)
@@ -61,7 +62,7 @@ async def test_render_nextjs_page(rf: RequestFactory):
             mock_get.return_value.__aenter__.return_value.headers = {"Location": "target_value", "unimportant": ""}
             mock_session.return_value.__aenter__ = AsyncMock(return_value=MagicMock(get=mock_get))
 
-            http_response = await render_nextjs_page(request, allow_redirects=True, headers={"extra": "headers"})
+            http_response = await nextjs_page(allow_redirects=True, headers={"extra": "headers"})(request)
 
             assert http_response.content == nextjs_response.encode()
             assert http_response.status_code == 200
@@ -80,3 +81,18 @@ async def test_render_nextjs_page(rf: RequestFactory):
         assert kwargs["headers"]["user-agent"] == ""
         assert kwargs["headers"]["x-real-ip"] == "127.0.0.1"
         assert kwargs["headers"]["extra"] == "headers"
+
+
+@pytest.mark.asyncio
+async def test_render_nextjs_page_to_string(rf: RequestFactory):
+    request = rf.get(f"/random/path")
+    nextjs_response = """<html><head><link/></head><body id="__django_nextjs_body"><div id="__django_nextjs_body_begin"/><div id="__django_nextjs_body_end"/></body></html>"""
+
+    with patch("aiohttp.ClientSession") as mock_session:
+        with patch("aiohttp.ClientSession.get") as mock_get:
+            mock_get.return_value.__aenter__.return_value.text = AsyncMock(return_value=nextjs_response)
+            mock_session.return_value.__aenter__ = AsyncMock(return_value=MagicMock(get=mock_get))
+
+            response_text = await render_nextjs_page_to_string(request, template_name="custom_document.html")
+            assert "before_head" in response_text
+            assert "after_head" in response_text

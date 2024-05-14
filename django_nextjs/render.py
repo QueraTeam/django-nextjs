@@ -49,7 +49,7 @@ def _get_nextjs_request_cookies(request: HttpRequest):
     (i.e. dont use HTTP unsafe methods or GraphQL mutations).
     https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability
     """
-    unreserved_cookies = {k: v for k, v in request.COOKIES.items() if not morsel.isReservedKey(k) and k and v}
+    unreserved_cookies = {k: v for k, v in request.COOKIES.items() if k and v and not morsel.isReservedKey(k)}
     return {**unreserved_cookies, settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
 
 

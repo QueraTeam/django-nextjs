@@ -26,11 +26,11 @@ So you want to use both Django and Next.js in your project. There are two scenar
 
 From a [comment on StackOverflow]:
 
-> Run 2 ports on the same server. One for django (public facing)
+> Run 2 ports on the same server. One for Django (public facing)
 > and one for Next.js (internal).
-> Let django handle all web requests.
-> For each request, query Next.js from django view to get HTML response.
-> Return that exact HTML response from django view.
+> Let Django handle all web requests.
+> For each request, query Next.js from Django view to get HTML response.
+> Return that exact HTML response from Django view.
 
 ## Installation
 
@@ -141,14 +141,23 @@ $ npm run build
 $ npm run start
 ```
 
-Develop your pages in Next.js.
-Write a django URL and an async view for each page like this:
+Start by developing your pages in Next.js, Then define a Django URL for each Next.js page. Here's an example of how you can do this:
 
 ```python
-from django.http import HttpResponse
+from django_nextjs.views import nextjs_page
+
+urlpatterns = [
+    path("/nextjs/page", nextjs_page(), name="nextjs_page"),
+]
+```
+
+Even though it's not recommended, sometimes you might need to add some custom steps before showing a Next.js page in Django. However, **we advise moving this logic to Next.js to ensure it's applied even during client-side redirects**. If you find yourself in this situation, you can create an asynchronous view for each page as demonstrated below:
+
+```python
 from django_nextjs.render import render_nextjs_page
 
 async def jobs(request):
+    # Your custom logic
     return await render_nextjs_page(request)
 ```
 
@@ -203,7 +212,7 @@ in `app` directory:
 ...
 ``` -->
 
-Write a django template that extends `django_nextjs/document_base.html`:
+Write a Django template that extends `django_nextjs/document_base.html`:
 
 ```django
 {% extends "django_nextjs/document_base.html" %}
@@ -225,18 +234,27 @@ Write a django template that extends `django_nextjs/document_base.html`:
 {% endblock %}
 ```
 
-Pass the template name to `render_nextjs_page`:
+Pass the template name to `nextjs_page` or `render_nextjs_page`:
 
 ```python
+from django_nextjs.render import render_nextjs_page
+from django_nextjs.views import nextjs_page
+
 async def jobs(request):
-    return await render_nextjs_page(request, "path/to/template.html")
+    return await render_nextjs_page(request, template_name="path/to/template.html")
+
+urlpatterns = [
+    path("/nextjs/page", nextjs_page(template_name="path/to/template.html"), name="nextjs_page"),
+    path("/jobs", jobs, name="jobs_page")
+]
+
 ```
 
 ## Notes
 
 - If you want to add a file to `public` directory of Next.js,
   that file should be in `public/next` subdirectory to work correctly.
-- If you're using django channels, make sure all your middlewares are
+- If you're using Django channels, make sure all your middlewares are
   [async-capable](https://docs.djangoproject.com/en/dev/topics/http/middleware/#asynchronous-support).
 - To avoid "Too many redirects" error, you may need to add `APPEND_SLASH = False` in your Django project's `settings.py`. Also, do not add `/` at the end of nextjs paths in `urls.py`.
 - This package does not provide a solution for passing data from Django to Next.js. The Django Rest Framework, GraphQL, or similar solutions should still be used.

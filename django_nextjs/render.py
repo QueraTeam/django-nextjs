@@ -82,6 +82,7 @@ def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
             "Location",
             "Vary",
             "Content-Type",
+            "Set-Cookie",
         ],
     )
 

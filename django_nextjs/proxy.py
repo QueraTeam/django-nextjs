@@ -30,11 +30,13 @@ class NextJSProxyHttpConsumer(AsyncHttpConsumer):
         headers = {k.decode(): v.decode() for k, v in self.scope["headers"]}
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url) as response:
-                await self.send_headers(
-                    headers=[
-                        (b"Content-Type", response.headers["content-type"].encode()),
-                    ]
-                )
+                nextjs_response_headers = [
+                    (name.encode(), value.encode())
+                    for name, value in response.headers.items()
+                    if name.lower() in ["content-type", "set-cookie"]
+                ]
+
+                await self.send_headers(headers=nextjs_response_headers)
                 async for data in response.content.iter_any():
                     await self.send_body(data, more_body=True)
                 await self.send_body(b"", more_body=False)

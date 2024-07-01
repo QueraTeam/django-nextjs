@@ -84,6 +84,55 @@ async def test_nextjs_page(rf: RequestFactory):
 
 
 @pytest.mark.asyncio
+async def test_set_csrftoken(rf: RequestFactory):
+    def get_mock_request():
+        return rf.get("/random/path")
+
+    async def get_mock_response(request: RequestFactory):
+        with patch("aiohttp.ClientSession") as mock_session:
+            with patch("aiohttp.ClientSession.get") as mock_get:
+                mock_get.return_value.__aenter__.return_value.text = AsyncMock(return_value="<html></html>")
+                mock_get.return_value.__aenter__.return_value.status = 200
+                mock_session.return_value.__aenter__ = AsyncMock(return_value=MagicMock(get=mock_get))
+                return await nextjs_page(allow_redirects=True)(request), mock_session
+
+    # User does not have csrftoken and django-nextjs is not configured to guarantee one
+    with patch("django_nextjs.render.ENSURE_CSRF_TOKEN", False):
+        http_request = get_mock_request()
+        _, mock_session = await get_mock_response(http_request)
+        args, kwargs = mock_session.call_args
+        # This triggers CsrfViewMiddleware to call response.set_cookie with updated csrftoken value
+        assert "CSRF_COOKIE_NEEDS_UPDATE" not in http_request.META
+        assert "csrftoken" not in kwargs["cookies"]
+
+    # User does not have csrftoken and django-nextjs is configured to guarantee one
+    with patch("django_nextjs.render.ENSURE_CSRF_TOKEN", True):
+        http_request = get_mock_request()
+        _, mock_session = await get_mock_response(http_request)
+        args, kwargs = mock_session.call_args
+        assert "CSRF_COOKIE_NEEDS_UPDATE" in http_request.META
+        assert "csrftoken" in kwargs["cookies"]
+
+    # User has csrftoken and django-nextjs is not configured to guarantee one
+    with patch("django_nextjs.render.ENSURE_CSRF_TOKEN", False):
+        http_request = get_mock_request()
+        http_request.COOKIES["csrftoken"] = "whatever"
+        _, mock_session = await get_mock_response(http_request)
+        args, kwargs = mock_session.call_args
+        assert "CSRF_COOKIE_NEEDS_UPDATE" not in http_request.META
+        assert "csrftoken" in kwargs["cookies"]
+
+    # User has csrftoken and django-nextjs is configured to guarantee one
+    with patch("django_nextjs.render.ENSURE_CSRF_TOKEN", True):
+        http_request = get_mock_request()
+        http_request.COOKIES["csrftoken"] = "whatever"
+        _, mock_session = await get_mock_response(http_request)
+        args, kwargs = mock_session.call_args
+        assert "CSRF_COOKIE_NEEDS_UPDATE" not in http_request.META
+        assert "csrftoken" in kwargs["cookies"]
+
+
+@pytest.mark.asyncio
 async def test_render_nextjs_page_to_string(rf: RequestFactory):
     request = rf.get(f"/random/path")
     nextjs_response = """<html><head><link/></head><body id="__django_nextjs_body"><div id="__django_nextjs_body_begin"/><div id="__django_nextjs_body_end"/></body></html>"""

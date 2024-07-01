@@ -267,12 +267,20 @@ Default settings:
 ```python
     NEXTJS_SETTINGS = {
         "nextjs_server_url": "http://127.0.0.1:3000",
+        "ensure_csrf_token": True,
     }
 ```
 
 ### `nextjs_server_url`
 
 The URL of Next.js server (started by `npm run dev` or `npm run start`)
+
+### `ensure_csrf_token`
+
+If user does not have a CSRF token, ensure that one is generated and included in the initial request to the NextJS
+server, by calling Django's `django.middleware.csrf.get_token`.  If `django.middleware.csrf.CsrfViewMiddleware` is
+installed, the initial response will include a `Set-Cookie` header to persist the CSRF token value on the client.
+This behaviour is enabled by default.
 
 ## Development
 

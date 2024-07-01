@@ -10,7 +10,7 @@ from django.middleware.csrf import get_token as get_csrf_token
 from django.template.loader import render_to_string
 from multidict import MultiMapping
 
-from .app_settings import NEXTJS_SERVER_URL
+from .app_settings import ENSURE_CSRF_TOKEN, NEXTJS_SERVER_URL
 from .utils import filter_mapping_obj
 
 morsel = Morsel()
@@ -49,7 +49,9 @@ def _get_nextjs_request_cookies(request: HttpRequest):
     https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability
     """
     unreserved_cookies = {k: v for k, v in request.COOKIES.items() if k and not morsel.isReservedKey(k)}
-    return {**unreserved_cookies, settings.CSRF_COOKIE_NAME: get_csrf_token(request)}
+    if ENSURE_CSRF_TOKEN is True and settings.CSRF_COOKIE_NAME not in unreserved_cookies:
+        unreserved_cookies[settings.CSRF_COOKIE_NAME] = get_csrf_token(request)
+    return unreserved_cookies
 
 
 def _get_nextjs_request_headers(request: HttpRequest, headers: Union[Dict, None] = None):

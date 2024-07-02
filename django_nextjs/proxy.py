@@ -91,10 +91,12 @@ class NextJSProxyView(View):
 
     def get(self, request):
         url = NEXTJS_SERVER_URL + request.path + "?" + request.GET.urlencode()
+        headers = {}
+        for header in ["Cookie", "User-Agent"]:
+            if header in request.headers:
+                headers[header] = request.headers[header]
 
-        urllib_response = urllib.request.urlopen(
-            urllib.request.Request(url, headers={"Cookie": request.headers.get("Cookie")})
-        )
+        urllib_response = urllib.request.urlopen(urllib.request.Request(url, headers=headers))
 
         return http.StreamingHttpResponse(
             self._iter_content(urllib_response), headers={"Content-Type": urllib_response.headers.get("Content-Type")}

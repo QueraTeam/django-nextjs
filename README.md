@@ -277,10 +277,11 @@ The URL of Next.js server (started by `npm run dev` or `npm run start`)
 
 ### `ensure_csrf_token`
 
-If user does not have a CSRF token, ensure that one is generated and included in the initial request to the NextJS
-server, by calling Django's `django.middleware.csrf.get_token`.  If `django.middleware.csrf.CsrfViewMiddleware` is
-installed, the initial response will include a `Set-Cookie` header to persist the CSRF token value on the client.
-This behaviour is enabled by default.
+If the user does not have a CSRF token, ensure that one is generated and included in the initial request to the Next.js server by calling Django's `django.middleware.csrf.get_token`. If `django.middleware.csrf.CsrfViewMiddleware` is installed, the initial response will include a `Set-Cookie` header to persist the CSRF token value on the client. This behavior is enabled by default.
+
+#### When You Need to `ensure_csrf_token`?
+
+You may need to issue GraphQL POST requests to fetch data in Next.js `getServerSideProps`. If this is the user's first request, there will be no CSRF cookie, causing the request to fail since GraphQL uses POST even for data fetching. However, as long as `getServerSideProps` functions are side-effect free (i.e., they don't use HTTP unsafe methods or GraphQL mutations), this should be fine from a security perspective. Read more [here](https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability).
 
 ## Development
 

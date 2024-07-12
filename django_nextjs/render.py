@@ -40,13 +40,6 @@ def _get_render_context(html: str, extra_context: Union[Dict, None] = None):
 def _get_nextjs_request_cookies(request: HttpRequest):
     """
     Ensure we always send a CSRF cookie to Next.js server (if there is none in `request` object, generate one)
-    Reason: We are going to issue GraphQL POST requests to fetch data in NextJS getServerSideProps.
-            If this is the first request of user, there is no CSRF cookie and request fails,
-            since GraphQL uses POST even for data fetching.
-    Isn't this a vulnerability?
-    No, as long as getServerSideProps functions are side effect free
-    (i.e. dont use HTTP unsafe methods or GraphQL mutations).
-    https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability
     """
     unreserved_cookies = {k: v for k, v in request.COOKIES.items() if k and not morsel.isReservedKey(k)}
     if ENSURE_CSRF_TOKEN is True and settings.CSRF_COOKIE_NAME not in unreserved_cookies:

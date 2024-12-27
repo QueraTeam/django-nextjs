@@ -1,27 +1,24 @@
-# Django Next.js
+# Django-Next.js
 
 [![](https://img.shields.io/pypi/v/django-nextjs.svg)](https://pypi.python.org/pypi/django-nextjs/)
 [![](https://github.com/QueraTeam/django-nextjs/workflows/tests/badge.svg)](https://github.com/QueraTeam/django-nextjs/actions)
 [![](https://img.shields.io/github/license/QueraTeam/django-nextjs.svg)](https://github.com/QueraTeam/django-nextjs/blob/master/LICENSE)
 [![](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Seamlessly integrate Next.js into your Django project,
-enabling smooth transitions
-and coexistence of pages rendered by Django templates
-and modern pages served by Next.js.
+Integrate Next.js into your Django project,
+allowing Django pages and modern Next.js pages to work together seamlessly.
 
 ## Is this package right for you?
 
-Django Next.js is designed for projects
-that need Django templates and Next.js pages
-to work together seamlessly.
-If this sounds like you, **this package is the perfect fit** ✅:
+django-nextjs is designed for projects
+that need both Django pages (usually rendered by Django templates) and Next.js pages. Some scenarios:
 
-- You want to enhance an existing Django project by adding Next.js pages.
-- Your project is large, and you want to transition your frontend to Next.js gradually without disrupting your current workflow.
+- You want to add some Next.js pages to an existing Django project.
+- You want to migrate your frontend to Next.js, but since the project is large, you want to do it gradually.
 
-However, if you’re starting a new project and intend to use Django purely as a backend with Next.js as a standalone frontend, you **don’t** need this package.
-In this scenario, Django handles API requests only, and Next.js serves all front-end content.
+If this sounds like you, **this package is the perfect fit**. ✅
+
+However, if you’re starting a new project and intend to use Django purely as an API backend with Next.js as a standalone frontend, you **don’t need** this package.
 Simply run both servers and configure your public web server to point to Next.js for a straightforward setup.
 
 ## How does it work?
@@ -35,7 +32,7 @@ This is how it looks like in production:
 
 In development, to simplify the setup and remove the need to a reverse proxy like Nginx, Django also acts as the reverse proxy for Next.js client-side requests.
 
-## Installation
+## Getting Started
 
 - Install the latest version from PyPI.
 
@@ -47,7 +44,7 @@ In development, to simplify the setup and remove the need to a reverse proxy lik
 
 - Set up Next.js URLs depending on your environment.
 
-### Setup Next.js URLs (Development Environment)
+## Setup Next.js URLs (Development Environment)
 
 If you're serving your site under ASGI during development,
 use [Django Channels](https://channels.readthedocs.io/en/stable/) and
@@ -99,7 +96,7 @@ path("", include("django_nextjs.urls"))
 **Warning:** If you are serving under ASGI, do NOT add this
 to your `urls.py`. It may cause deadlocks.
 
-### Setup Next.js URLs (Production Environment)
+## Setup Next.js URLs (Production Environment)
 
 In production, use a reverse proxy like Nginx or Caddy:
 
@@ -282,7 +279,7 @@ The URL of Next.js server (started by `npm run dev` or `npm run start`)
 
 If the user does not have a CSRF token, ensure that one is generated and included in the initial request to the Next.js server by calling Django's `django.middleware.csrf.get_token`. If `django.middleware.csrf.CsrfViewMiddleware` is installed, the initial response will include a `Set-Cookie` header to persist the CSRF token value on the client. This behavior is enabled by default.
 
-#### When you need `ensure_csrf_token`?
+**When you need `ensure_csrf_token`?**
 
 You may need to issue GraphQL POST requests to fetch data in Next.js `getServerSideProps`. If this is the user's first request, there will be no CSRF cookie, causing the request to fail since GraphQL uses POST even for data fetching.
 In this case this option solves the issue,

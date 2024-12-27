@@ -31,7 +31,7 @@ After opening a Next.js page, the user can navigate to other Next.js pages witho
 
 This is how it looks like in production:
 
-![](.github/assets/how-it-works-production.webp)
+![How it works in production](.github/assets/how-it-works-production.webp)
 
 In development, to simplify the setup and remove the need to a reverse proxy like Nginx, Django also acts as the reverse proxy for Next.js client-side requests.
 

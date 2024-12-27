@@ -8,7 +8,7 @@
 Integrate Next.js into your Django project,
 allowing Django and Next.js pages to work together seamlessly.
 
-## 🤔 Is this package right for you?
+## Is this package right for you?
 
 django-nextjs is designed for projects
 that need both Django pages (usually rendered by Django templates) and Next.js pages. Some scenarios:
@@ -21,7 +21,7 @@ If this sounds like you, **this package is the perfect fit**. ✅
 However, if you’re starting a new project and intend to use Django purely as an API backend with Next.js as a standalone frontend, you **don’t need** this package.
 Simply run both servers and configure your public web server to point to Next.js for a straightforward setup.
 
-## 🔍 How does it work?
+## How does it work?
 
 When a user opens a page, django receives the initial request, queries the Next.js server for the HTML response, and returns it to the user.
 After opening a Next.js page, the user can navigate to other Next.js pages without any additional requests to Django (the Next.js server handles the routing).
@@ -32,7 +32,7 @@ This is how it looks like in production:
 
 In development, to simplify the setup and remove the need to a reverse proxy like Nginx, Django also acts as the reverse proxy for Next.js client-side requests.
 
-## 🛠️ Getting Started
+## Getting Started
 
 - Install the latest version from PyPI.
 
@@ -44,7 +44,7 @@ In development, to simplify the setup and remove the need to a reverse proxy lik
 
 - Set up Next.js URLs depending on your environment.
 
-## 🧑‍💻 Setup Next.js URLs (Development Environment)
+## Setup Next.js URLs (Development Environment)
 
 If you're serving your site under ASGI during development,
 use [Django Channels](https://channels.readthedocs.io/en/stable/) and
@@ -96,7 +96,7 @@ path("", include("django_nextjs.urls"))
 **Warning:** If you are serving under ASGI, do NOT add this
 to your `urls.py`. It may cause deadlocks.
 
-## 🌐 Setup Next.js URLs (Production Environment)
+## Setup Next.js URLs (Production Environment)
 
 In production, use a reverse proxy like Nginx or Caddy:
 
@@ -128,7 +128,7 @@ location /next/ {
 }
 ```
 
-## 📖 Usage
+## Usage
 
 Start Next.js server:
 
@@ -161,7 +161,7 @@ async def jobs(request):
     return await render_nextjs_page(request)
 ```
 
-## 📝 Customizing the HTML Response
+## Customizing the HTML Response
 
 You can modify the HTML code that Next.js returns in your Django code.
 
@@ -250,7 +250,7 @@ urlpatterns = [
 
 ```
 
-## 🗒️ Notes
+## Notes
 
 - If you want to add a file to `public` directory of Next.js,
   that file should be in `public/next` subdirectory to work correctly.
@@ -260,7 +260,7 @@ urlpatterns = [
 - This package does not provide a solution for passing data from Django to Next.js. The Django Rest Framework, GraphQL, or similar solutions should still be used.
 - The Next.js server will not be run by this package. You will need to run it yourself.
 
-## ⚙️ Settings
+## Settings
 
 Default settings:
 
@@ -285,7 +285,7 @@ You may need to issue GraphQL POST requests to fetch data in Next.js `getServerS
 In this case this option solves the issue,
 and as long as `getServerSideProps` functions are side-effect free (i.e., they don't use HTTP unsafe methods or GraphQL mutations), it should be fine from a security perspective. Read more [here](https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability).
 
-## 🤝 Contributing
+## Contributing
 
 To start development:
 
@@ -294,6 +294,6 @@ To start development:
 
 Love django-next.js? 🌟 Star us on GitHub to help the project grow!
 
-## 📜 License
+## License
 
 MIT

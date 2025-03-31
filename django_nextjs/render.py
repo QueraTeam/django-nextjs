@@ -5,7 +5,7 @@ from urllib.parse import quote
 import aiohttp
 from asgiref.sync import sync_to_async
 from django.conf import settings
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
 from django.middleware.csrf import get_token as get_csrf_token
 from django.template.loader import render_to_string
 from multidict import MultiMapping
@@ -78,6 +78,12 @@ def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
             "Vary",
             "Content-Type",
             "Set-Cookie",
+            "Link",
+            "Transfer-Encoding",
+            "Cache-Control",
+            "Connection",
+            "Date",
+            "Keep-Alive",
         ],
     )
 
@@ -150,3 +156,38 @@ async def render_nextjs_page(
         headers=headers,
     )
     return HttpResponse(content=content, status=status, headers=response_headers)
+
+
+async def stream_nextjs_page(
+    request: HttpRequest,
+    headers: Union[Dict, None] = None,
+    allow_redirects: bool = False,
+):
+    """
+    Stream a Next.js page response.
+    This function is used to stream the response from a Next.js server.
+    """
+    page_path = quote(request.path_info.lstrip("/"))
+    params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
+    next_url = f"{NEXTJS_SERVER_URL}/{page_path}"
+
+    session = aiohttp.ClientSession(
+        cookies=_get_nextjs_request_cookies(request),
+        headers=_get_nextjs_request_headers(request, headers),
+    )
+    nextjs_response = await session.get(next_url, params=params, allow_redirects=allow_redirects)
+    response_headers = _get_nextjs_response_headers(nextjs_response.headers)
+
+    async def stream_nextjs_response():
+        try:
+            async for chunk in nextjs_response.content.iter_any():
+                yield chunk
+        finally:
+            await nextjs_response.release()
+            await session.close()
+
+    return StreamingHttpResponse(
+        stream_nextjs_response(),
+        status=nextjs_response.status,
+        headers=response_headers,
+    )

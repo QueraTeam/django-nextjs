@@ -70,7 +70,7 @@ def _get_nextjs_request_headers(request: HttpRequest, headers: Union[Dict, None]
     }
 
 
-def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
+def _get_nextjs_response_headers(headers: MultiMapping[str], stream: bool = False) -> Dict:
     return filter_mapping_obj(
         headers,
         selected_keys=[
@@ -79,11 +79,11 @@ def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
             "Content-Type",
             "Set-Cookie",
             "Link",
-            "Transfer-Encoding",
             "Cache-Control",
             "Connection",
             "Date",
             "Keep-Alive",
+            "Transfer-Encoding" if stream else None,
         ],
     )
 
@@ -160,8 +160,8 @@ async def render_nextjs_page(
 
 async def stream_nextjs_page(
     request: HttpRequest,
-    headers: Union[Dict, None] = None,
     allow_redirects: bool = False,
+    headers: Union[Dict, None] = None,
 ):
     """
     Stream a Next.js page response.
@@ -176,7 +176,7 @@ async def stream_nextjs_page(
         headers=_get_nextjs_request_headers(request, headers),
     )
     nextjs_response = await session.get(next_url, params=params, allow_redirects=allow_redirects)
-    response_headers = _get_nextjs_response_headers(nextjs_response.headers)
+    response_headers = _get_nextjs_response_headers(nextjs_response.headers, stream=True)
 
     async def stream_nextjs_response():
         try:

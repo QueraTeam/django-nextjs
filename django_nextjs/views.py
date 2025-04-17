@@ -13,9 +13,7 @@ def nextjs_page(
     headers: Union[Dict, None] = None,
 ):
     if stream and (template_name or context or using):
-        raise ValueError(
-            "When 'stream' parameter is True, 'template_name', 'context', and 'using' cannot be used together."
-        )
+        raise ValueError("When 'stream' is set to True, you should not use 'template_name', 'context', or 'using'")
 
     async def view(request, *args, **kwargs):
         if stream:

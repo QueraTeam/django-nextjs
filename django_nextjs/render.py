@@ -83,7 +83,7 @@ def _get_nextjs_response_headers(headers: MultiMapping[str], stream: bool = Fals
             "Connection",
             "Date",
             "Keep-Alive",
-            "Transfer-Encoding" if stream else None,
+            *(["Transfer-Encoding"] if stream else []),
         ],
     )
 

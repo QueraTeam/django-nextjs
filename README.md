@@ -178,7 +178,7 @@ urlpatterns = [
 **Considerations:**
 
 - When using `stream_nextjs_page`, you cannot use a custom HTML template in Django, as the HTML is streamed directly from the Next.js server.
-- The `stream` parameter is currently set to `False` by default for backward compatibility. However, in future releases, it will be set to `True` by default. We recommend updating your code to explicitly enable streaming to prepare for this change.
+- The `stream` parameter will default to `True` in future releases. Currently, it is set to `False` for backward compatibility. To avoid breaking changes, we recommend explicitly setting `stream=False` if you are customizing HTML and do not want to use streaming.
 
 ## Customizing the HTML Response
 

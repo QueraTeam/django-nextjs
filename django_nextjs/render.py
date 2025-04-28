@@ -171,23 +171,31 @@ async def stream_nextjs_page(
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
     next_url = f"{NEXTJS_SERVER_URL}/{page_path}"
 
-    session = aiohttp.ClientSession(
-        cookies=_get_nextjs_request_cookies(request),
-        headers=_get_nextjs_request_headers(request, headers),
-    )
-    nextjs_response = await session.get(next_url, params=params, allow_redirects=allow_redirects)
-    response_headers = _get_nextjs_response_headers(nextjs_response.headers, stream=True)
+    session = aiohttp.ClientSession()
 
-    async def stream_nextjs_response():
-        try:
-            async for chunk in nextjs_response.content.iter_any():
-                yield chunk
-        finally:
-            await nextjs_response.release()
-            await session.close()
+    try:
+        nextjs_response = await session.get(
+            next_url,
+            params=params,
+            allow_redirects=allow_redirects,
+            cookies=_get_nextjs_request_cookies(request),
+            headers=_get_nextjs_request_headers(request, headers)
+        )
+        response_headers = _get_nextjs_response_headers(nextjs_response.headers, stream=True)
 
-    return StreamingHttpResponse(
-        stream_nextjs_response(),
-        status=nextjs_response.status,
-        headers=response_headers,
-    )
+        async def stream_nextjs_response():
+            try:
+                async for chunk in nextjs_response.content.iter_any():
+                    yield chunk
+            finally:
+                await nextjs_response.release()
+                await session.close()
+
+        return StreamingHttpResponse(
+            stream_nextjs_response(),
+            status=nextjs_response.status,
+            headers=response_headers,
+        )
+    except:
+        await session.close()
+        raise

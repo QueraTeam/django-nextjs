@@ -178,7 +178,7 @@ async def stream_nextjs_page(
             params=params,
             allow_redirects=allow_redirects,
             cookies=_get_nextjs_request_cookies(request),
-            headers=_get_nextjs_request_headers(request, headers)
+            headers=_get_nextjs_request_headers(request, headers),
         )
         response_headers = _get_nextjs_response_headers(nextjs_response.headers)
 

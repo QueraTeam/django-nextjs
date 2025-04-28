@@ -161,6 +161,25 @@ async def jobs(request):
     return await render_nextjs_page(request)
 ```
 
+#### Using `nextjs_page` with `stream=True` (Recommended)
+
+If you're using the [Next.js App Router](https://nextjs.org/docs/app) (introduced in Next.js 13+), you can enable streaming by setting the `stream=True` parameter in the `nextjs_page` function. This allows the HTML response to be streamed directly from the Next.js server to the client. This approach is particularly useful for server-side rendering with streaming support to show an [instant loading state](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming#instant-loading-states) from the Next.js server while the content of a route segment loads.
+
+Here's an example:
+
+```python
+from django_nextjs.views import nextjs_page
+
+urlpatterns = [
+  path("/nextjs/page", nextjs_page(stream=True), name="nextjs_page"),
+]
+```
+
+**Considerations:**
+
+- When using `stream_nextjs_page`, you cannot use a custom HTML template in Django, as the HTML is streamed directly from the Next.js server.
+- The `stream` parameter will default to `True` in future releases. Currently, it is set to `False` for backward compatibility. To avoid breaking changes, we recommend explicitly setting `stream=False` if you are customizing HTML and do not want to use streaming.
+
 ## Customizing the HTML Response
 
 You can modify the HTML code that Next.js returns in your Django code.

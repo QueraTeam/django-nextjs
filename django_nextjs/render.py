@@ -70,7 +70,7 @@ def _get_nextjs_request_headers(request: HttpRequest, headers: Union[Dict, None]
     }
 
 
-def _get_nextjs_response_headers(headers: MultiMapping[str], stream: bool = False) -> Dict:
+def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
     return filter_mapping_obj(
         headers,
         selected_keys=[
@@ -83,7 +83,6 @@ def _get_nextjs_response_headers(headers: MultiMapping[str], stream: bool = Fals
             "Connection",
             "Date",
             "Keep-Alive",
-            *(["Transfer-Encoding"] if stream else []),
         ],
     )
 
@@ -181,7 +180,7 @@ async def stream_nextjs_page(
             cookies=_get_nextjs_request_cookies(request),
             headers=_get_nextjs_request_headers(request, headers)
         )
-        response_headers = _get_nextjs_response_headers(nextjs_response.headers, stream=True)
+        response_headers = _get_nextjs_response_headers(nextjs_response.headers)
 
         async def stream_nextjs_response():
             try:

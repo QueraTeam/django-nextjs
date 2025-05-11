@@ -1,7 +1,8 @@
 import asyncio
-import re
 import urllib.request
 from http.client import HTTPResponse
+from typing import Optional
+from urllib.parse import urlparse
 
 import aiohttp
 import websockets
@@ -10,6 +11,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django import http
 from django.conf import settings
 from django.views import View
+from websockets.asyncio.client import ClientConnection
 
 from django_nextjs.app_settings import NEXTJS_SERVER_URL
 from django_nextjs.exceptions import NextJSImproperlyConfigured
@@ -44,35 +46,74 @@ class NextJSProxyHttpConsumer(AsyncHttpConsumer):
 
 class NextJSProxyWebsocketConsumer(AsyncWebsocketConsumer):
     """
-    Proxies websocket requests to Next.js server in development environment.
+    Manages WebSocket connections and proxies messages between the client (browser)
+    and the Next.js development server.
 
-    - This is an async consumer for django channels.
-    - Use this for nextjs 12 and above to activate webpack hmr.
+    This consumer is essential for enabling real-time features like Hot Module
+    Replacement (HMR) during development. It establishes a WebSocket connection
+    to the Next.js server and relays messages back and forth, allowing for
+    seamless updates in the browser when code changes are detected.
+
+    Note: This consumer is intended for use in development environments only.
     """
 
-    async def connect_to_nextjs_server(self):
-        url = "ws://" + re.match(r".+://(.+:\d+)", NEXTJS_SERVER_URL).group(1) + self.scope["path"]
-        self.websocket_nextjs = await websockets.connect(url)
+    nextjs_connection: Optional[ClientConnection]
+    nextjs_listener_task: Optional[asyncio.Task]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not settings.DEBUG:
+            raise NextJSImproperlyConfigured("This proxy is for development only.")
+        self.nextjs_connection = None
+        self.nextjs_listener_task = None
 
     async def connect(self):
-        await self.connect_to_nextjs_server()
+        nextjs_websocket_url = f"ws://{urlparse(NEXTJS_SERVER_URL).netloc}{self.scope['path']}"
+        try:
+            self.nextjs_connection = await websockets.connect(nextjs_websocket_url)
+        except:
+            await self.close()
+            raise
+        self.nextjs_listener_task = asyncio.create_task(self._receive_from_nextjs_server())
         await self.accept()
 
-        async def receive_from_nextjs_server():
-            async for message in self.websocket_nextjs:
-                await self.send(message)
-
-        asyncio.ensure_future(receive_from_nextjs_server())
+    async def _receive_from_nextjs_server(self):
+        """
+        Listens for messages from the Next.js development server and forwards them to the browser.
+        """
+        try:
+            async for message in self.nextjs_connection:
+                if isinstance(message, bytes):
+                    await self.send(bytes_data=message)
+                elif isinstance(message, str):
+                    await self.send(text_data=message)
+        except websockets.ConnectionClosedError:
+            await self.close()
 
     async def receive(self, text_data=None, bytes_data=None):
-        """received message from browser"""
+        """
+        Handles incoming messages from the browser and forwards them to the Next.js development server.
+        """
+        data = text_data or bytes_data
+        if not data:
+            return
         try:
-            await self.websocket_nextjs.send(text_data)
+            await self.nextjs_connection.send(data)
         except websockets.ConnectionClosed:
-            await self.connect_to_nextjs_server()
+            await self.close()
 
-    async def close(self, code=None):
-        await self.websocket_nextjs.close()
+    async def disconnect(self, close_code):
+        """
+        Performs cleanup when the WebSocket connection is closed, either by the browser or by us.
+        """
+
+        if self.nextjs_listener_task:
+            self.nextjs_listener_task.cancel()
+            self.nextjs_listener_task = None
+
+        if self.nextjs_connection:
+            await self.nextjs_connection.close()
+            self.nextjs_connection = None
 
 
 class NextJSProxyView(View):

@@ -38,7 +38,7 @@ class NextJSProxyHttpConsumer(AsyncHttpConsumer):
                     if name.lower() in ["content-type", "set-cookie"]
                 ]
 
-                await self.send_headers(headers=nextjs_response_headers)
+                await self.send_headers(status=response.status, headers=nextjs_response_headers)
                 async for data in response.content.iter_any():
                     await self.send_body(data, more_body=True)
                 await self.send_body(b"", more_body=False)

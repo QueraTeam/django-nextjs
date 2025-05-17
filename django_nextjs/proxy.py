@@ -81,6 +81,9 @@ class NextJSProxyWebsocketConsumer(AsyncWebsocketConsumer):
         """
         Listens for messages from the Next.js development server and forwards them to the browser.
         """
+        if not self.nextjs_connection:
+            await self.close()
+            return
         try:
             async for message in self.nextjs_connection:
                 if isinstance(message, bytes):
@@ -97,12 +100,15 @@ class NextJSProxyWebsocketConsumer(AsyncWebsocketConsumer):
         data = text_data or bytes_data
         if not data:
             return
+        if not self.nextjs_connection:
+            await self.close()
+            return
         try:
             await self.nextjs_connection.send(data)
         except websockets.ConnectionClosed:
             await self.close()
 
-    async def disconnect(self, close_code):
+    async def disconnect(self, code):
         """
         Performs cleanup when the WebSocket connection is closed, either by the browser or by us.
         """

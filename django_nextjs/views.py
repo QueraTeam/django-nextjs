@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Optional
 
 from .render import render_nextjs_page, stream_nextjs_page
 
@@ -7,10 +7,10 @@ def nextjs_page(
     *,
     stream: bool = False,
     template_name: str = "",
-    context: Union[Dict, None] = None,
-    using: Union[str, None] = None,
+    context: Optional[dict] = None,
+    using: Optional[str] = None,
     allow_redirects: bool = False,
-    headers: Union[Dict, None] = None,
+    headers: Optional[dict] = None,
 ):
     if stream and (template_name or context or using):
         raise ValueError("When 'stream' is set to True, you should not use 'template_name', 'context', or 'using'")

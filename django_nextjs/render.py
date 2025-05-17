@@ -1,5 +1,5 @@
 from http.cookies import Morsel
-from typing import Dict, Tuple, Union
+from typing import Optional
 from urllib.parse import quote
 
 import aiohttp
@@ -16,7 +16,7 @@ from .utils import filter_mapping_obj
 morsel = Morsel()
 
 
-def _get_render_context(html: str, extra_context: Union[Dict, None] = None):
+def _get_render_context(html: str, extra_context: Optional[dict] = None):
     a = html.find("<head>")
     b = html.find('</head><body id="__django_nextjs_body"', a)
     c = html.find('<div id="__django_nextjs_body_begin"', b)
@@ -47,7 +47,7 @@ def _get_nextjs_request_cookies(request: HttpRequest):
     return unreserved_cookies
 
 
-def _get_nextjs_request_headers(request: HttpRequest, headers: Union[Dict, None] = None):
+def _get_nextjs_request_headers(request: HttpRequest, headers: Optional[dict] = None):
     # These headers are used by NextJS to indicate if a request is expecting a full HTML
     # response, or an RSC response.
     server_component_headers = filter_mapping_obj(
@@ -70,7 +70,7 @@ def _get_nextjs_request_headers(request: HttpRequest, headers: Union[Dict, None]
     }
 
 
-def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
+def _get_nextjs_response_headers(headers: MultiMapping[str]) -> dict:
     return filter_mapping_obj(
         headers,
         selected_keys=[
@@ -90,11 +90,11 @@ def _get_nextjs_response_headers(headers: MultiMapping[str]) -> Dict:
 async def _render_nextjs_page_to_string(
     request: HttpRequest,
     template_name: str = "",
-    context: Union[Dict, None] = None,
-    using: Union[str, None] = None,
+    context: Optional[dict] = None,
+    using: Optional[str] = None,
     allow_redirects: bool = False,
-    headers: Union[Dict, None] = None,
-) -> Tuple[str, int, Dict[str, str]]:
+    headers: Optional[dict] = None,
+) -> tuple[str, int, dict[str, str]]:
     page_path = quote(request.path_info.lstrip("/"))
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
 
@@ -122,10 +122,10 @@ async def _render_nextjs_page_to_string(
 async def render_nextjs_page_to_string(
     request: HttpRequest,
     template_name: str = "",
-    context: Union[Dict, None] = None,
-    using: Union[str, None] = None,
+    context: Optional[dict] = None,
+    using: Optional[str] = None,
     allow_redirects: bool = False,
-    headers: Union[Dict, None] = None,
+    headers: Optional[dict] = None,
 ):
     html, _, _ = await _render_nextjs_page_to_string(
         request,
@@ -141,10 +141,10 @@ async def render_nextjs_page_to_string(
 async def render_nextjs_page(
     request: HttpRequest,
     template_name: str = "",
-    context: Union[Dict, None] = None,
-    using: Union[str, None] = None,
+    context: Optional[dict] = None,
+    using: Optional[str] = None,
     allow_redirects: bool = False,
-    headers: Union[Dict, None] = None,
+    headers: Optional[dict] = None,
 ):
     content, status, response_headers = await _render_nextjs_page_to_string(
         request,
@@ -160,7 +160,7 @@ async def render_nextjs_page(
 async def stream_nextjs_page(
     request: HttpRequest,
     allow_redirects: bool = False,
-    headers: Union[Dict, None] = None,
+    headers: Optional[dict] = None,
 ):
     """
     Stream a Next.js page response.

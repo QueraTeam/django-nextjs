@@ -4,9 +4,7 @@ Key = typing.TypeVar("Key")
 Value = typing.TypeVar("Value")
 
 
-def filter_mapping_obj(
-    mapping_obj: typing.Mapping[Key, Value], *, selected_keys: typing.Iterable
-) -> typing.Dict[Key, Value]:
+def filter_mapping_obj(mapping_obj: typing.Mapping[Key, Value], *, selected_keys: typing.Iterable) -> dict[Key, Value]:
     """
     Selects the items in a mapping object (dict, etc.)
     """

@@ -4,7 +4,7 @@ exclude: ".excalidraw$"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.6.0"
+    rev: "v5.0.0"
     hooks:
       - id: trailing-whitespace # trims trailing whitespace
         args: [--markdown-linebreak-ext=md]
@@ -17,25 +17,25 @@ repos:
       - id: check-merge-conflict # check for files that contain merge conflict strings
 
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: "1.17.0"
+    rev: "1.25.0"
     hooks:
       - id: django-upgrade
         args: [--target-version, "4.2"]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: "v3.15.2"
+    rev: "v3.19.1"
     hooks:
       - id: pyupgrade
-        args: [--py38-plus]
+        args: [--py39-plus]
 
   - repo: https://github.com/pycqa/isort
-    rev: "5.13.2"
+    rev: "6.0.1"
     hooks:
       - id: isort
         name: isort (python)
 
   - repo: https://github.com/psf/black
-    rev: "24.4.2"
+    rev: "25.1.0"
     hooks:
       - id: black
 

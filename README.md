@@ -48,7 +48,7 @@ In development, to simplify the setup and remove the need to a reverse proxy lik
 
 If you're serving your site under ASGI during development,
 use [Django Channels](https://channels.readthedocs.io/en/stable/) and
-add `NextJSProxyHttpConsumer`, `NextJSProxyWebsocketConsumer` to `asgi.py` like the following example.
+use `DjangoNextjsASGIMiddleware` like the following example.
 
 **Note:** We recommend using ASGI and Django Channels,
 because it is required for [fast refresh](https://nextjs.org/docs/architecture/fast-refresh) (hot module replacement) to work properly in Nextjs 12+.
@@ -56,34 +56,23 @@ because it is required for [fast refresh](https://nextjs.org/docs/architecture/f
 ```python
 import os
 
+from channels.routing import ProtocolTypeRouter
 from django.core.asgi import get_asgi_application
-from django.urls import re_path, path
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 django_asgi_app = get_asgi_application()
 
-from channels.auth import AuthMiddlewareStack
-from channels.routing import ProtocolTypeRouter, URLRouter
-from django_nextjs.proxy import NextJSProxyHttpConsumer, NextJSProxyWebsocketConsumer
+from django_nextjs.asgi import DjangoNextjsASGIMiddleware
 
-from django.conf import settings
-
-# put your custom routes here if you need
-http_routes = [re_path(r"", django_asgi_app)]
-websocket_routers = []
-
-if settings.DEBUG:
-    http_routes.insert(0, re_path(r"^(?:_next|__next|next).*", NextJSProxyHttpConsumer.as_asgi()))
-    websocket_routers.insert(0, path("_next/webpack-hmr", NextJSProxyWebsocketConsumer.as_asgi()))
-
-
-application = ProtocolTypeRouter(
-    {
-        # Django's ASGI application to handle traditional HTTP and websocket requests.
-        "http": URLRouter(http_routes),
-        "websocket": AuthMiddlewareStack(URLRouter(websocket_routers)),
-        # ...
-    }
+application = DjangoNextjsASGIMiddleware(
+    ProtocolTypeRouter(
+        {
+            # Django's ASGI application to handle traditional HTTP requests.
+            "http": django_asgi_app,
+            # "websocket": ...
+            # ...
+        }
+    )
 )
 ```
 

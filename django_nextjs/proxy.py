@@ -14,6 +14,7 @@ from django.views import View
 from websockets.asyncio.client import ClientConnection
 
 from django_nextjs.app_settings import NEXTJS_SERVER_URL
+from django_nextjs.asgi import DjangoNextjsASGIMiddleware
 from django_nextjs.exceptions import NextJSImproperlyConfigured
 
 
@@ -28,10 +29,20 @@ class NextJSProxyHttpConsumer(AsyncHttpConsumer):
     async def handle(self, body):
         if not settings.DEBUG:
             raise NextJSImproperlyConfigured("This proxy is for development only.")
+
         url = NEXTJS_SERVER_URL + self.scope["path"] + "?" + self.scope["query_string"].decode()
         headers = {k.decode(): v.decode() for k, v in self.scope["headers"]}
-        async with aiohttp.ClientSession(headers=headers) as session:
-            async with session.get(url) as response:
+
+        if session := self.scope.get("state", {}).get(DjangoNextjsASGIMiddleware.HTTP_SESSION_KEY):
+            session_is_temporary = False
+        else:
+            # If the shared session is not available, we create a temporary session.
+            # This is typically the case when the ASGI server does not support the lifespan protocol (e.g. Daphne).
+            session = aiohttp.ClientSession()
+            session_is_temporary = True
+
+        try:
+            async with session.get(url, headers=headers) as response:
                 nextjs_response_headers = [
                     (name.encode(), value.encode())
                     for name, value in response.headers.items()
@@ -42,6 +53,9 @@ class NextJSProxyHttpConsumer(AsyncHttpConsumer):
                 async for data in response.content.iter_any():
                     await self.send_body(data, more_body=True)
                 await self.send_body(b"", more_body=False)
+        finally:
+            if session_is_temporary:
+                await session.close()
 
 
 class NextJSProxyWebsocketConsumer(AsyncWebsocketConsumer):

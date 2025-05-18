@@ -46,44 +46,57 @@ In development, to simplify the setup and remove the need to a reverse proxy lik
 
 ## Setup Next.js URLs (Development Environment)
 
-If you're serving your site under ASGI during development,
-use [Django Channels](https://channels.readthedocs.io/en/stable/) and
-use `DjangoNextjsASGIMiddleware` like the following example.
+We **strongly recommend** using ASGI with [Django Channels](https://channels.readthedocs.io/en/stable/),
+as this enables critical Next.js features like [fast refresh](https://nextjs.org/docs/architecture/fast-refresh) through WebSocket support.
 
-**Note:** We recommend using ASGI and Django Channels,
-because it is required for [fast refresh](https://nextjs.org/docs/architecture/fast-refresh) (hot module replacement) to work properly in Nextjs 12+.
+Configure your `asgi.py` with `DjangoNextjsASGIMiddleware` as shown below:
 
 ```python
 import os
 
-from channels.routing import ProtocolTypeRouter
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
 django_asgi_app = get_asgi_application()
 
 from django_nextjs.asgi import DjangoNextjsASGIMiddleware
 
+application = DjangoNextjsASGIMiddleware(django_asgi_app)
+```
+
+The middleware automatically handles routing for Next.js assets and API requests, and supports WebSocket connections for fast refresh to work properly.
+
+You can also use `DjangoNextjsASGIMiddleware` with any ASGI application.
+For example, you can use it with `ProtocolTypeRouter` if you have other protocols:
+
+```python
 application = DjangoNextjsASGIMiddleware(
     ProtocolTypeRouter(
         {
-            # Django's ASGI application to handle traditional HTTP requests.
             "http": django_asgi_app,
-            # "websocket": ...
+            "websocket": my_websocket_handler,
             # ...
         }
     )
 )
 ```
 
-Otherwise (if serving under WSGI during development), add the following to the beginning of `urls.py`:
+Otherwise (if serving under WSGI during development), add the following path to the beginning of `urls.py`:
 
 ```python
-path("", include("django_nextjs.urls"))
+urlpatterns = [
+    path("", include("django_nextjs.urls")),
+    ...
+]
 ```
 
-**Warning:** If you are serving under ASGI, do NOT add this
-to your `urls.py`. It may cause deadlocks.
+> [!IMPORTANT]
+> Using ASGI is **required**
+> for [fast refresh](https://nextjs.org/docs/architecture/fast-refresh)
+> to work properly in Next.js 12+.
+> Without it, you'll need to manually refresh your browser
+> to see changes during development.
+
 
 ## Setup Next.js URLs (Production Environment)
 

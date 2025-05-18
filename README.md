@@ -291,6 +291,7 @@ Default settings:
 NEXTJS_SETTINGS = {
     "nextjs_server_url": "http://127.0.0.1:3000",
     "ensure_csrf_token": True,
+    "dev_proxy_paths": ["/_next", "/__next", "/next"],
 }
 ```
 
@@ -307,6 +308,15 @@ If the user does not have a CSRF token, ensure that one is generated and include
 You may need to issue GraphQL POST requests to fetch data in Next.js `getServerSideProps`. If this is the user's first request, there will be no CSRF cookie, causing the request to fail since GraphQL uses POST even for data fetching.
 In this case this option solves the issue,
 and as long as `getServerSideProps` functions are side-effect free (i.e., they don't use HTTP unsafe methods or GraphQL mutations), it should be fine from a security perspective. Read more [here](https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability).
+
+### `dev_proxy_paths`
+
+A list of paths that should be proxied to the Next.js server in development mode.
+
+This is useful if you want to use a custom path instead of `/next` inside the `public` directory of Next.js.
+For example, if you want to use `/static-next` instead of `/next`, you can set `proxy_paths` to `["/_next", "/__next", "/static-next"]`
+and place your static files in `public/static-next` directory of Next.js.
+You should also update the production reverse proxy configuration accordingly.
 
 ## Contributing
 

@@ -11,7 +11,7 @@ from django.conf import settings
 from websockets import Data
 from websockets.asyncio.client import ClientConnection
 
-from django_nextjs.app_settings import NEXTJS_SERVER_URL
+from django_nextjs.app_settings import DEV_PROXY_PATHS, NEXTJS_SERVER_URL
 from django_nextjs.exceptions import NextJSImproperlyConfigured
 
 # https://github.com/encode/starlette/blob/b9db010d49cfa33d453facde56e53a621325c720/starlette/types.py
@@ -211,12 +211,10 @@ class DjangoNextjsASGIMiddleware:
 
     HTTP_SESSION_KEY = "django_nextjs_http_session"
 
-    def __init__(self, inner_app: ASGIApp, *, nextjs_proxy_paths: typing.Optional[list[str]] = None) -> None:
+    def __init__(self, inner_app: ASGIApp) -> None:
         self.inner_app = inner_app
 
         if settings.DEBUG:
-            self.nextjs_proxy_paths: list[str] = nextjs_proxy_paths or ["/_next", "/__next", "/next"]
-
             # Pre-create ASGI callables for the consumers
             self.nextjs_http_proxy = NextJSHttpProxy.as_asgi()
             self.nextjs_websocket_proxy = NextJSWebsocketProxy.as_asgi()
@@ -231,7 +229,7 @@ class DjangoNextjsASGIMiddleware:
         # --- Next.js Route Handling (DEBUG mode only) ---
         elif settings.DEBUG:
             path = scope.get("path", "")
-            if any(path.startswith(prefix) for prefix in self.nextjs_proxy_paths):
+            if any(path.startswith(prefix) for prefix in DEV_PROXY_PATHS):
                 if scope["type"] == "http":
                     return await self.nextjs_http_proxy(scope, receive, send)
                 elif scope["type"] == "websocket":

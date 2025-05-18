@@ -46,9 +46,6 @@ In development, to simplify the setup and remove the need to a reverse proxy lik
 
 ## Setup Next.js URLs (Development Environment)
 
-We **strongly recommend** using ASGI with [Django Channels](https://channels.readthedocs.io/en/stable/),
-as this enables critical Next.js features like [fast refresh](https://nextjs.org/docs/architecture/fast-refresh) through WebSocket support.
-
 Configure your `asgi.py` with `DjangoNextjsASGIMiddleware` as shown below:
 
 ```python
@@ -66,8 +63,9 @@ application = DjangoNextjsASGIMiddleware(django_asgi_app)
 
 The middleware automatically handles routing for Next.js assets and API requests, and supports WebSocket connections for fast refresh to work properly.
 
-You can also use `DjangoNextjsASGIMiddleware` with any ASGI application.
-For example, you can use it with `ProtocolTypeRouter` if you have other protocols:
+You can use `DjangoNextjsASGIMiddleware` with any ASGI application.
+For example, you can use it with `ProtocolTypeRouter`
+if you are using [Django Channels](https://channels.readthedocs.io/en/latest/):
 
 ```python
 application = DjangoNextjsASGIMiddleware(
@@ -81,7 +79,7 @@ application = DjangoNextjsASGIMiddleware(
 )
 ```
 
-Otherwise (if serving under WSGI during development), add the following path to the beginning of `urls.py`:
+If you're not using ASGI, add the following path to the beginning of `urls.py`:
 
 ```python
 urlpatterns = [
@@ -96,6 +94,10 @@ urlpatterns = [
 > to work properly in Next.js 12+.
 > Without it, you'll need to manually refresh your browser
 > to see changes during development.
+>
+> To run your ASGI application, you can use an ASGI server
+> such as [Daphne](https://github.com/django/daphne)
+> or [Uvicorn](https://www.uvicorn.org/).
 
 
 ## Setup Next.js URLs (Production Environment)
@@ -275,7 +277,7 @@ urlpatterns = [
 
 - If you want to add a file to `public` directory of Next.js,
   that file should be in `public/next` subdirectory to work correctly.
-- If you're using Django channels, make sure all your middlewares are
+- If you're using ASGI, make sure all your middlewares are
   [async-capable](https://docs.djangoproject.com/en/dev/topics/http/middleware/#asynchronous-support).
 - To avoid "Too many redirects" error, you may need to add `APPEND_SLASH = False` in your Django project's `settings.py`. Also, do not add `/` at the end of nextjs paths in `urls.py`.
 - This package does not provide a solution for passing data from Django to Next.js. The Django Rest Framework, GraphQL, or similar solutions should still be used.

@@ -91,7 +91,7 @@ class NextJsHttpProxy(NextJsProxyBase):
         url = NEXTJS_SERVER_URL + self.scope["path"] + "?" + self.scope["query_string"].decode()
         headers = {k.decode(): v.decode() for k, v in self.scope["headers"]}
 
-        if session := self.scope.get("state", {}).get(DjangoNextJsAsgiMiddleware.HTTP_SESSION_KEY):
+        if session := self.scope.get("state", {}).get(NextJsMiddleware.HTTP_SESSION_KEY):
             session_is_temporary = False
         else:
             # If the shared session is not available, we create a temporary session.
@@ -195,7 +195,7 @@ class NextJsWebSocketProxy(NextJsProxyBase):
             self.nextjs_connection = None
 
 
-class DjangoNextJsAsgiMiddleware:
+class NextJsMiddleware:
     """
     ASGI middleware that integrates Django and Next.js applications.
 

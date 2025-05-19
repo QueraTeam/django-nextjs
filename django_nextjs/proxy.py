@@ -20,7 +20,7 @@ class NextJSProxyHttpConsumer(NextJsHttpProxy):
         # https://github.com/django/daphne/issues/352
         logger.warning(
             "NextJSProxyHttpConsumer is deprecated and will be removed in the next major release. "
-            "Use DjangoNextJsAsgiMiddleware from django_nextjs.asgi instead.",
+            "Use NextJsMiddleware from django_nextjs.asgi instead.",
         )
         return super().as_asgi()
 
@@ -32,7 +32,7 @@ class NextJSProxyWebsocketConsumer(NextJsWebSocketProxy):
         # https://github.com/django/daphne/issues/352
         logger.warning(
             "NextJSProxyWebsocketConsumer is deprecated and will be removed in the next major release. "
-            "Use DjangoNextJsAsgiMiddleware from django_nextjs.asgi instead.",
+            "Use NextJsMiddleware from django_nextjs.asgi instead.",
         )
         return super().as_asgi()
 

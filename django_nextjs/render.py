@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from multidict import MultiMapping
 
 from .app_settings import ENSURE_CSRF_TOKEN, NEXTJS_SERVER_URL
-from .asgi import DjangoNextJsAsgiMiddleware
+from .asgi import NextJsMiddleware
 from .utils import filter_mapping_obj
 
 morsel = Morsel()
@@ -172,7 +172,7 @@ async def stream_nextjs_page(
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
     next_url = f"{NEXTJS_SERVER_URL}/{page_path}"
 
-    if session := request.scope.get("state", {}).get(DjangoNextJsAsgiMiddleware.HTTP_SESSION_KEY):
+    if session := request.scope.get("state", {}).get(NextJsMiddleware.HTTP_SESSION_KEY):
         session_is_temporary = False
     else:
         # If the shared session is not available, we create a temporary session.

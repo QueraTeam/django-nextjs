@@ -12,7 +12,7 @@ from websockets import Data
 from websockets.asyncio.client import ClientConnection
 
 from django_nextjs.app_settings import DEV_PROXY_PATHS, NEXTJS_SERVER_URL
-from django_nextjs.exceptions import NextJSImproperlyConfigured
+from django_nextjs.exceptions import NextJsImproperlyConfigured
 
 # https://github.com/encode/starlette/blob/b9db010d49cfa33d453facde56e53a621325c720/starlette/types.py
 Scope = typing.MutableMapping[str, typing.Any]
@@ -26,13 +26,13 @@ class StopReceiving(Exception):
     pass
 
 
-class NextJSProxyBase(ABC):
+class NextJsProxyBase(ABC):
     scope: Scope
     send: Send
 
     def __init__(self):
         if not settings.DEBUG:
-            raise NextJSImproperlyConfigured("This proxy is for development only.")
+            raise NextJsImproperlyConfigured("This proxy is for development only.")
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         self.scope = scope
@@ -55,7 +55,7 @@ class NextJSProxyBase(ABC):
         Similar in purpose to Django's as_view().
         """
 
-        async def app(scope, receive, send):
+        async def app(scope: Scope, receive: Receive, send: Send):
             consumer = cls()
             return await consumer(scope, receive, send)
 
@@ -64,7 +64,7 @@ class NextJSProxyBase(ABC):
         return app
 
 
-class NextJSHttpProxy(NextJSProxyBase):
+class NextJsHttpProxy(NextJsProxyBase):
     """
     Manages HTTP requests and proxies them to the Next.js development server.
 
@@ -91,7 +91,7 @@ class NextJSHttpProxy(NextJSProxyBase):
         url = NEXTJS_SERVER_URL + self.scope["path"] + "?" + self.scope["query_string"].decode()
         headers = {k.decode(): v.decode() for k, v in self.scope["headers"]}
 
-        if session := self.scope.get("state", {}).get(DjangoNextjsASGIMiddleware.HTTP_SESSION_KEY):
+        if session := self.scope.get("state", {}).get(DjangoNextJsAsgiMiddleware.HTTP_SESSION_KEY):
             session_is_temporary = False
         else:
             # If the shared session is not available, we create a temporary session.
@@ -118,7 +118,7 @@ class NextJSHttpProxy(NextJSProxyBase):
                 await session.close()
 
 
-class NextJSWebsocketProxy(NextJSProxyBase):
+class NextJsWebSocketProxy(NextJsProxyBase):
     """
     Manages WebSocket connections and proxies messages between the client (browser)
     and the Next.js development server.
@@ -195,7 +195,7 @@ class NextJSWebsocketProxy(NextJSProxyBase):
             self.nextjs_connection = None
 
 
-class DjangoNextjsASGIMiddleware:
+class DjangoNextJsAsgiMiddleware:
     """
     ASGI middleware that integrates Django and Next.js applications.
 
@@ -216,8 +216,8 @@ class DjangoNextjsASGIMiddleware:
 
         if settings.DEBUG:
             # Pre-create ASGI callables for the consumers
-            self.nextjs_http_proxy = NextJSHttpProxy.as_asgi()
-            self.nextjs_websocket_proxy = NextJSWebsocketProxy.as_asgi()
+            self.nextjs_http_proxy = NextJsHttpProxy.as_asgi()
+            self.nextjs_websocket_proxy = NextJsWebSocketProxy.as_asgi()
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
 

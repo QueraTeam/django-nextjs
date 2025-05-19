@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from multidict import MultiMapping
 
 from .app_settings import ENSURE_CSRF_TOKEN, NEXTJS_SERVER_URL
-from .asgi import DjangoNextjsASGIMiddleware
+from .asgi import DjangoNextJsAsgiMiddleware
 from .utils import filter_mapping_obj
 
 morsel = Morsel()
@@ -50,7 +50,7 @@ def _get_nextjs_request_cookies(request: HttpRequest):
 
 
 def _get_nextjs_request_headers(request: HttpRequest, headers: Optional[dict] = None):
-    # These headers are used by NextJS to indicate if a request is expecting a full HTML
+    # These headers are used by Next.js to indicate if a request is expecting a full HTML
     # response, or an RSC response.
     server_component_headers = filter_mapping_obj(
         request.headers,
@@ -172,7 +172,7 @@ async def stream_nextjs_page(
     params = [(k, v) for k in request.GET.keys() for v in request.GET.getlist(k)]
     next_url = f"{NEXTJS_SERVER_URL}/{page_path}"
 
-    if session := request.scope.get("state", {}).get(DjangoNextjsASGIMiddleware.HTTP_SESSION_KEY):
+    if session := request.scope.get("state", {}).get(DjangoNextJsAsgiMiddleware.HTTP_SESSION_KEY):
         session_is_temporary = False
     else:
         # If the shared session is not available, we create a temporary session.

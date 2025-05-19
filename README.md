@@ -46,7 +46,7 @@ In development, to simplify the setup and remove the need to a reverse proxy lik
 
 ## Setup Next.js URLs (Development Environment)
 
-Configure your `asgi.py` with `DjangoNextjsASGIMiddleware` as shown below:
+Configure your `asgi.py` with `DjangoNextJsAsgiMiddleware` as shown below:
 
 ```python
 import os
@@ -56,19 +56,19 @@ from django.core.asgi import get_asgi_application
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
 django_asgi_app = get_asgi_application()
 
-from django_nextjs.asgi import DjangoNextjsASGIMiddleware
+from django_nextjs.asgi import DjangoNextJsAsgiMiddleware
 
-application = DjangoNextjsASGIMiddleware(django_asgi_app)
+application = DjangoNextJsAsgiMiddleware(django_asgi_app)
 ```
 
 The middleware automatically handles routing for Next.js assets and API requests, and supports WebSocket connections for fast refresh to work properly.
 
-You can use `DjangoNextjsASGIMiddleware` with any ASGI application.
+You can use `DjangoNextJsAsgiMiddleware` with any ASGI application.
 For example, you can use it with `ProtocolTypeRouter`
 if you are using [Django Channels](https://channels.readthedocs.io/en/latest/):
 
 ```python
-application = DjangoNextjsASGIMiddleware(
+application = DjangoNextJsAsgiMiddleware(
     ProtocolTypeRouter(
         {
             "http": django_asgi_app,

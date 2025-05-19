@@ -7,32 +7,32 @@ from django.conf import settings
 from django.views import View
 
 from django_nextjs.app_settings import NEXTJS_SERVER_URL
-from django_nextjs.asgi import NextJSHttpProxy, NextJSWebsocketProxy
-from django_nextjs.exceptions import NextJSImproperlyConfigured
+from django_nextjs.asgi import NextJsHttpProxy, NextJsWebSocketProxy
+from django_nextjs.exceptions import NextJsImproperlyConfigured
 
 logger = logging.getLogger(__name__)
 
 
-class NextJSProxyHttpConsumer(NextJSHttpProxy):
+class NextJSProxyHttpConsumer(NextJsHttpProxy):
     @classmethod
     def as_asgi(cls):
         # Use "logging" instead of "warnings" module because of this issue:
         # https://github.com/django/daphne/issues/352
         logger.warning(
             "NextJSProxyHttpConsumer is deprecated and will be removed in the next major release. "
-            "Use DjangoNextjsASGIMiddleware from django_nextjs.asgi instead.",
+            "Use DjangoNextJsAsgiMiddleware from django_nextjs.asgi instead.",
         )
         return super().as_asgi()
 
 
-class NextJSProxyWebsocketConsumer(NextJSWebsocketProxy):
+class NextJSProxyWebsocketConsumer(NextJsWebSocketProxy):
     @classmethod
     def as_asgi(cls):
         # Use "logging" instead of "warnings" module because of this issue:
         # https://github.com/django/daphne/issues/352
         logger.warning(
             "NextJSProxyWebsocketConsumer is deprecated and will be removed in the next major release. "
-            "Use DjangoNextjsASGIMiddleware from django_nextjs.asgi instead.",
+            "Use DjangoNextJsAsgiMiddleware from django_nextjs.asgi instead.",
         )
         return super().as_asgi()
 
@@ -48,7 +48,7 @@ class NextJSProxyView(View):
 
     def dispatch(self, request, *args, **kwargs):
         if not settings.DEBUG:
-            raise NextJSImproperlyConfigured("This proxy is for development only.")
+            raise NextJsImproperlyConfigured("This proxy is for development only.")
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request):

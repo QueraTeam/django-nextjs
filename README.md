@@ -1,8 +1,8 @@
 # Django-Next.js
 
 [![Tests status](https://github.com/QueraTeam/django-nextjs/workflows/tests/badge.svg)](https://github.com/QueraTeam/django-nextjs/actions)
-[![PyPI version](https://img.shields.io/pypi/v/django-nextjs.svg)](https://pypi.python.org/pypi/django-nextjs/)
-[![PyPI downloads](https://img.shields.io/pypi/dm/django-nextjs.svg)](https://pypi.org/project/django-nextjs/)
+[![PyPI version](https://img.shields.io/pypi/v/django-nextjs.svg)](https://pypi.org/project/django-nextjs/)
+![PyPI downloads](https://img.shields.io/pypi/dm/django-nextjs.svg)
 [![License: MIT](https://img.shields.io/github/license/QueraTeam/django-nextjs.svg)](https://github.com/QueraTeam/django-nextjs/blob/master/LICENSE)
 [![Code style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -26,8 +26,6 @@ If this sounds like you, **this package is the perfect fit**. ✅
 
 However, if you’re starting a new project and intend to use Django purely as an API backend with Next.js as a standalone frontend, you don’t need this package.
 Simply run both servers and configure your public web server to route requests to Next.js; this provides a more straightforward setup.
-
-
 
 ## How it works
 
@@ -238,7 +236,7 @@ urlpatterns = [
 
 ## Notes
 
-- Place Next.js public files in the `public/next` subdirectory.
+- Place Next.js [public](https://nextjs.org/docs/app/api-reference/file-conventions/public-folder) files in the `public/next` subdirectory.
 - Ensure all your middlewares are [async-capable](https://docs.djangoproject.com/en/dev/topics/http/middleware/#asynchronous-support).
 - Set `APPEND_SLASH = False` in `settings.py` to avoid redirect loops, and don't add trailing slashes to Next.js paths.
 - Implement an API to pass data between Django and Next.js.
@@ -277,7 +275,7 @@ If the user does not have a CSRF token, ensure that one is generated and include
 
 A list of paths that should be proxied to the Next.js server in development mode.
 
-This option is useful if you want to use a custom path instead of `/next` inside the Next.js `public` directory.
+This option is useful if you want to use a custom path instead of `/next` inside the Next.js [`public` directory](https://nextjs.org/docs/app/api-reference/file-conventions/public-folder).
 For example, if you want to use `/static-next` instead of `/next`, you can set `proxy_paths` to `["/_next", "/__next", "/static-next"]`
 and place your static files in the `public/static-next` directory.
 You should also update the production reverse proxy configuration accordingly.

@@ -98,7 +98,7 @@ urlpatterns = [
 > [!IMPORTANT]
 > Using ASGI is **required**
 > for [fast refresh](https://nextjs.org/docs/architecture/fast-refresh)
-> to work properly in Next.js 12 and later.
+> to work properly.
 > Without it, you'll need to manually refresh your browser
 > to see changes during development.
 >
@@ -160,7 +160,7 @@ urlpatterns = [
 
 ### The `stream` parameter
 
-If you're using the [Next.js App Router](https://nextjs.org/docs/app) (introduced in Next.js 13), you can enable streaming by setting the `stream` parameter to `True` in the `nextjs_page` function. This allows the HTML response to be streamed directly from the Next.js server to the client. This approach is particularly useful for server-side rendering with streaming support to display an [instant loading state](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming#instant-loading-states) from the Next.js server while the content of a route segment loads.
+If you're using the [Next.js App Router](https://nextjs.org/docs/app), you can enable streaming by setting the `stream` parameter to `True` in the `nextjs_page` function. This allows the HTML response to be streamed directly from the Next.js server to the client. This approach is particularly useful for server-side rendering with streaming support to display an [instant loading state](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming#instant-loading-states) from the Next.js server while the content of a route segment loads.
 
 Currently, the default value for this parameter
 is set to `False` for backward compatibility.

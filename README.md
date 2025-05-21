@@ -1,5 +1,3 @@
-<div style="text-align: center">
-
 # Django-Next.js
 
 [![Tests status](https://github.com/QueraTeam/django-nextjs/workflows/tests/badge.svg)](https://github.com/QueraTeam/django-nextjs/actions)
@@ -7,8 +5,6 @@
 [![PyPI downloads](https://img.shields.io/pypi/dm/django-nextjs.svg)](https://pypi.org/project/django-nextjs/)
 [![License: MIT](https://img.shields.io/github/license/QueraTeam/django-nextjs.svg)](https://github.com/QueraTeam/django-nextjs/blob/master/LICENSE)
 [![Code style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
-</div>
 
 Integrate Next.js into your Django project,
 allowing Django and Next.js pages to work together seamlessly.

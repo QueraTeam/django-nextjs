@@ -8,6 +8,11 @@
 Integrate Next.js into your Django project,
 allowing Django and Next.js pages to work together seamlessly.
 
+## Compatibility
+
+- Python: **3.9**, **3.10**, **3.11**, **3.12**, **3.13**
+- Django: **4.2**, **5.0**, **5.1**, **5.2**
+
 ## Is this package right for you?
 
 django-nextjs is designed for projects
@@ -19,34 +24,30 @@ that need both Django pages (usually rendered by Django templates) and Next.js p
 If this sounds like you, **this package is the perfect fit**. ✅
 
 However, if you’re starting a new project and intend to use Django purely as an API backend with Next.js as a standalone frontend, you **don’t need** this package.
-Simply run both servers and configure your public web server to point to Next.js for a straightforward setup.
+Simply run both servers and configure your public web server to route requests to Next.js; this provides a more straightforward setup.
 
 ## How does it work?
 
-When a user opens a page, django receives the initial request, queries the Next.js server for the HTML response, and returns it to the user.
+When a user opens a page, Django receives the initial request, queries the Next.js server for the HTML response, and returns it to the user.
 After opening a Next.js page, the user can navigate to other Next.js pages without any additional requests to Django (the Next.js server handles the routing).
 
-This is how it looks like in production:
+This is what it looks like in production:
 
 ![How it works in production](.github/assets/how-it-works-production.webp)
 
-In development, to simplify the setup and remove the need to a reverse proxy like Nginx, Django also acts as the reverse proxy for Next.js client-side requests.
+In development, to simplify the setup and remove the need for a reverse proxy like Nginx, Django also acts as the reverse proxy for Next.js client-side requests.
 
-## Getting Started
+## Getting started
 
-- Install the latest version from PyPI.
+Install the latest version from PyPI:
 
-  ```shell
-  pip install django-nextjs
-  ```
+```shell
+pip install django-nextjs
+```
 
-- Add `django_nextjs.apps.DjangoNextJSConfig` to `INSTALLED_APPS`.
+Add `django_nextjs` to `INSTALLED_APPS`.
 
-- Set up Next.js URLs depending on your environment.
-
-## Setup Next.js URLs (Development Environment)
-
-Configure your `asgi.py` with `NextJsMiddleware` as shown below:
+Configure your project's `asgi.py` with `NextJsMiddleware` as shown below:
 
 ```python
 import os
@@ -91,7 +92,7 @@ urlpatterns = [
 > [!IMPORTANT]
 > Using ASGI is **required**
 > for [fast refresh](https://nextjs.org/docs/architecture/fast-refresh)
-> to work properly in Next.js 12+.
+> to work properly in Next.js 12 and later.
 > Without it, you'll need to manually refresh your browser
 > to see changes during development.
 >
@@ -100,17 +101,17 @@ urlpatterns = [
 > or [Uvicorn](https://www.uvicorn.org/).
 
 
-## Setup Next.js URLs (Production Environment)
+## Setup Next.js URLs in production
 
-In production, use a reverse proxy like Nginx or Caddy:
+In production, use a reverse proxy like Nginx or Caddy.
 
-| URL                 | Action                                     |
-| ------------------- | ------------------------------------------ |
-| `/_next/static/...` | Serve `NEXTJS_PATH/.next/static` directory |
-| `/_next/...`        | Proxy to `http://localhost:3000`           |
-| `/next/...`         | Serve `NEXTJS_PATH/public/next` directory  |
+| URL                 | Action                                                      |
+|---------------------|-------------------------------------------------------------|
+| `/_next/static/...` | Serve `NEXTJS_PATH/.next/static` directory                  |
+| `/_next/...`        | Proxy to the Next.js server (e.g., `http://127.0.0.1:3000`) |
+| `/next/...`         | Serve `NEXTJS_PATH/public/next` directory                   |
 
-Example config for Nginx:
+Example Nginx configuration:
 
 ```conf
 location /_next/static/ {
@@ -134,75 +135,50 @@ location /next/ {
 
 ## Usage
 
-Start Next.js server:
+Start the Next.js server using `npm run dev` or `npm run start` (depending on the environment).
 
-```shell
-# Development:
-$ npm run dev
-
-# Production:
-$ npm run build
-$ npm run start
-```
-
-Start by developing your pages in Next.js, Then define a Django URL for each Next.js page. Here's an example of how you can do this:
+For each Next.js page, define a Django URL that will render the page using the `nextjs_page` view.
 
 ```python
 from django_nextjs.views import nextjs_page
 
 urlpatterns = [
-    path("/nextjs/page", nextjs_page(), name="nextjs_page"),
+    path("/my/page", nextjs_page(), name="my_page"),
+
+    # To enable streaming, set stream=True (recommended)
+    path("/other/page", nextjs_page(stream=True), name="other_page"),
 ]
 ```
 
-Even though it's not recommended, sometimes you might need to add some custom steps before showing a Next.js page in Django. However, **we advise moving this logic to Next.js to ensure it's applied even during client-side navigation**. If you find yourself in this situation, you can create an asynchronous view for each page as demonstrated below:
+### The `stream` parameter
 
-```python
-from django_nextjs.render import render_nextjs_page
+If you're using the [Next.js App Router](https://nextjs.org/docs/app) (introduced in Next.js 13), you can enable streaming by setting the `stream` parameter to `True` in the `nextjs_page` function. This allows the HTML response to be streamed directly from the Next.js server to the client. This approach is particularly useful for server-side rendering with streaming support to display an [instant loading state](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming#instant-loading-states) from the Next.js server while the content of a route segment loads.
 
-async def jobs(request):
-    # Your custom logic
-    return await render_nextjs_page(request)
-```
+Currently, the default value for this parameter
+is set to `False` for backward compatibility.
+It will default to `True` in the next major release.
 
-#### Using `nextjs_page` with `stream=True` (Recommended)
-
-If you're using the [Next.js App Router](https://nextjs.org/docs/app) (introduced in Next.js 13+), you can enable streaming by setting the `stream=True` parameter in the `nextjs_page` function. This allows the HTML response to be streamed directly from the Next.js server to the client. This approach is particularly useful for server-side rendering with streaming support to show an [instant loading state](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming#instant-loading-states) from the Next.js server while the content of a route segment loads.
-
-Here's an example:
-
-```python
-from django_nextjs.views import nextjs_page
-
-urlpatterns = [
-  path("/nextjs/page", nextjs_page(stream=True), name="nextjs_page"),
-]
-```
-
-**Considerations:**
-
-- When using `stream_nextjs_page`, you cannot use a custom HTML template in Django, as the HTML is streamed directly from the Next.js server.
-- The `stream` parameter will default to `True` in future releases. Currently, it is set to `False` for backward compatibility. To avoid breaking changes, we recommend explicitly setting `stream=False` if you are customizing HTML and do not want to use streaming.
-
-## Customizing the HTML Response
+## Customizing the HTML response
 
 You can modify the HTML code that Next.js returns in your Django code.
 
-Avoiding duplicate code for the navbar and footer is a common use case
-for this if you are using both Next.js and Django templates.
+> [!WARNING]
+> This feature is not compatible with the Next.js App Router, and to use it,
+> you need to set the `stream` parameter to `False` in the `nextjs_page` function.
+> Because of these limitations, we do not recommend using this feature.
+> For more details, please refer to [this GitHub issue](https://github.com/QueraTeam/django-nextjs/issues/22).
+
+This is a common use case for avoiding duplicate code for the navbar and footer if you are using both Next.js and Django templates.
 Without it, you would have to write and maintain two separate versions
 of your navbar and footer (a Django template version and a Next.js version).
 However, you can simply create a Django template for your navbar and insert its code
-at the beginning of `<body>` tag returned from Next.js.
+at the beginning of the `<body>` tag in the HTML returned by Next.js.
 
-To enable this feature, you need to customize the document and root layout
-in Next.js and make the following adjustments:
+To enable this feature, you need to customize the Next.js `pages/_document` file and make the following adjustments:
 
-- Add `id="__django_nextjs_body"` as the first attribute of `<body>` element.
+- Add `id="__django_nextjs_body"` as the first attribute of the `<body>` element.
 - Add `<div id="__django_nextjs_body_begin" />` as the first element inside `<body>`.
 - Add `<div id="__django_nextjs_body_end" />` as the last element inside `<body>`.
-
-NOTE: Currently HTML customization is not working with [app router](https://nextjs.org/docs/app) (Next.js 13+).
 
 Read
 [this doc](https://nextjs.org/docs/pages/building-your-application/routing/custom-document)
@@ -219,21 +195,6 @@ and customize your Next.js document:
 </body>
 ...
 ```
-
-<!-- If you are using Next.js 13+, you also need to
-[customize the root layout](https://nextjs.org/docs/app/api-reference/file-conventions/layout)
-in `app` directory:
-
-```jsx
-// app/layout.jsx (or .tsx)
-...
-<body id="__django_nextjs_body" className={inter.className}>
-  <div id="__django_nextjs_body_begin" />
-  {children}
-  <div id="__django_nextjs_body_end" />
-</body>
-...
-``` -->
 
 Write a Django template that extends `django_nextjs/document_base.html`:
 
@@ -257,31 +218,25 @@ Write a Django template that extends `django_nextjs/document_base.html`:
 {% endblock %}
 ```
 
-Pass the template name to `nextjs_page` or `render_nextjs_page`:
+Pass the template name to `nextjs_page`:
 
 ```python
-from django_nextjs.render import render_nextjs_page
 from django_nextjs.views import nextjs_page
 
-async def jobs(request):
-    return await render_nextjs_page(request, template_name="path/to/template.html")
-
 urlpatterns = [
-    path("/nextjs/page", nextjs_page(template_name="path/to/template.html"), name="nextjs_page"),
-    path("/jobs", jobs, name="jobs_page")
+    path("/my/page", nextjs_page(template_name="path/to/template.html"), name="my_page"),
 ]
-
 ```
 
 ## Notes
 
-- If you want to add a file to `public` directory of Next.js,
-  that file should be in `public/next` subdirectory to work correctly.
+- If you want to add a file to the Next.js `public` directory,
+  that file should be in the `public/next` subdirectory for it to work correctly.
 - If you're using ASGI, make sure all your middlewares are
   [async-capable](https://docs.djangoproject.com/en/dev/topics/http/middleware/#asynchronous-support).
-- To avoid "Too many redirects" error, you may need to add `APPEND_SLASH = False` in your Django project's `settings.py`. Also, do not add `/` at the end of nextjs paths in `urls.py`.
+- To avoid "Too many redirects" errors, you may need to add `APPEND_SLASH = False` in your Django project's `settings.py`. Also, do not add `/` at the end of Next.js paths in `urls.py`.
 - This package does not provide a solution for passing data from Django to Next.js. The Django Rest Framework, GraphQL, or similar solutions should still be used.
-- The Next.js server will not be run by this package. You will need to run it yourself.
+- This package does not start the Next.js server. You need to run it yourself.
 
 ## Settings
 
@@ -297,25 +252,26 @@ NEXTJS_SETTINGS = {
 
 ### `nextjs_server_url`
 
-The URL of Next.js server (started by `npm run dev` or `npm run start`)
+The URL of the Next.js server (started by `npm run dev` or `npm run start`)
 
 ### `ensure_csrf_token`
 
 If the user does not have a CSRF token, ensure that one is generated and included in the initial request to the Next.js server by calling Django's `django.middleware.csrf.get_token`. If `django.middleware.csrf.CsrfViewMiddleware` is installed, the initial response will include a `Set-Cookie` header to persist the CSRF token value on the client. This behavior is enabled by default.
 
-**When you need `ensure_csrf_token`?**
-
-You may need to issue GraphQL POST requests to fetch data in Next.js `getServerSideProps`. If this is the user's first request, there will be no CSRF cookie, causing the request to fail since GraphQL uses POST even for data fetching.
-In this case this option solves the issue,
-and as long as `getServerSideProps` functions are side-effect free (i.e., they don't use HTTP unsafe methods or GraphQL mutations), it should be fine from a security perspective. Read more [here](https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability).
+> [!TIP]
+> **The use case for this option**
+>
+> You may need to issue GraphQL POST requests to fetch data in Next.js `getServerSideProps`. If this is the user's first request, there will be no CSRF cookie, causing the request to fail since GraphQL uses POST even for data fetching.
+> In this case, this option solves the issue,
+> and as long as `getServerSideProps` functions are side-effect free (i.e., they don't use HTTP unsafe methods or GraphQL mutations), it should be fine from a security perspective. Read more [here](https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability).
 
 ### `dev_proxy_paths`
 
 A list of paths that should be proxied to the Next.js server in development mode.
 
-This is useful if you want to use a custom path instead of `/next` inside the `public` directory of Next.js.
+This option is useful if you want to use a custom path instead of `/next` inside the Next.js `public` directory.
 For example, if you want to use `/static-next` instead of `/next`, you can set `proxy_paths` to `["/_next", "/__next", "/static-next"]`
-and place your static files in `public/static-next` directory of Next.js.
+and place your static files in the `public/static-next` directory.
 You should also update the production reverse proxy configuration accordingly.
 
 ## Contributing
@@ -325,7 +281,7 @@ To start development:
 - Install development dependencies in your virtualenv with `pip install -e '.[dev]'`
 - Install pre-commit hooks using `pre-commit install`.
 
-Love django-next.js? 🌟 Star us on GitHub to help the project grow!
+Love django-nextjs? 🌟 Star us on GitHub to help the project grow!
 
 ## License
 

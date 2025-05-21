@@ -252,7 +252,7 @@ The default settings are:
 NEXTJS_SETTINGS = {
     "nextjs_server_url": "http://127.0.0.1:3000",
     "ensure_csrf_token": True,
-    "dev_proxy_paths": ["/_next", "/__next", "/next"],
+    "public_subdirectory": "/next",
 }
 ```
 
@@ -271,13 +271,12 @@ If the user does not have a CSRF token, ensure that one is generated and include
 > In this case, this option solves the issue,
 > and as long as `getServerSideProps` functions are side-effect free (i.e., they don't use HTTP unsafe methods or GraphQL mutations), it should be fine from a security perspective. Read more [here](https://docs.djangoproject.com/en/3.2/ref/csrf/#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability).
 
-### `dev_proxy_paths`
+### `public_subdirectory`
 
-A list of paths that should be proxied to the Next.js server in development mode.
-
-This option is useful if you want to use a custom path instead of `/next` inside the Next.js [`public` directory](https://nextjs.org/docs/app/api-reference/file-conventions/public-folder).
-For example, if you want to use `/static-next` instead of `/next`, you can set `proxy_paths` to `["/_next", "/__next", "/static-next"]`
-and place your static files in the `public/static-next` directory.
+Use this option to set a custom path instead of `/next` inside the Next.js
+[`public` directory](https://nextjs.org/docs/app/api-reference/file-conventions/public-folder).
+For example, you can set this option to `/static-next`
+and place the Next.js static files in the `public/static-next` directory.
 You should also update the production reverse proxy configuration accordingly.
 
 ## Contributing

@@ -11,7 +11,7 @@ from django.conf import settings
 from websockets import Data
 from websockets.asyncio.client import ClientConnection
 
-from django_nextjs.app_settings import DEV_PROXY_PATHS, NEXTJS_SERVER_URL
+from django_nextjs.app_settings import NEXTJS_SERVER_URL, PUBLIC_SUBDIRECTORY
 from django_nextjs.exceptions import NextJsImproperlyConfigured
 
 # https://github.com/encode/starlette/blob/b9db010d49cfa33d453facde56e53a621325c720/starlette/types.py
@@ -229,7 +229,7 @@ class NextJsMiddleware:
         # --- Next.js Route Handling (DEBUG mode only) ---
         elif settings.DEBUG:
             path = scope.get("path", "")
-            if any(path.startswith(prefix) for prefix in DEV_PROXY_PATHS):
+            if any(path.startswith(prefix) for prefix in ["/_next", "/__next", PUBLIC_SUBDIRECTORY]):
                 if scope["type"] == "http":
                     return await self.nextjs_http_proxy(scope, receive, send)
                 elif scope["type"] == "websocket":

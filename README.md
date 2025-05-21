@@ -106,6 +106,8 @@ urlpatterns = [
 > such as [Daphne](https://github.com/django/daphne)
 > or [Uvicorn](https://www.uvicorn.org/).
 
+> [!WARNING]
+> The `NextJSProxyHttpConsumer` and `NextJSProxyWebsocketConsumer` classes that were previously used for setup still exist and work, but they are deprecated and will be removed in the next major release. Please use the `NextJsMiddleware` approach described above.
 
 ## Setup Next.js URLs in production
 

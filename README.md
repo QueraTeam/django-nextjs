@@ -1,19 +1,24 @@
+<div style="text-align: center">
+
 # Django-Next.js
 
-[![PyPI version](https://img.shields.io/pypi/v/django-nextjs.svg)](https://pypi.python.org/pypi/django-nextjs/)
 [![Tests status](https://github.com/QueraTeam/django-nextjs/workflows/tests/badge.svg)](https://github.com/QueraTeam/django-nextjs/actions)
+[![PyPI version](https://img.shields.io/pypi/v/django-nextjs.svg)](https://pypi.python.org/pypi/django-nextjs/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/django-nextjs.svg)](https://pypi.org/project/django-nextjs/)
 [![License: MIT](https://img.shields.io/github/license/QueraTeam/django-nextjs.svg)](https://github.com/QueraTeam/django-nextjs/blob/master/LICENSE)
 [![Code style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+</div>
 
 Integrate Next.js into your Django project,
 allowing Django and Next.js pages to work together seamlessly.
 
 ## Compatibility
 
-- Python: **3.9**, **3.10**, **3.11**, **3.12**, **3.13**
-- Django: **4.2**, **5.0**, **5.1**, **5.2**
+- **Python**: 3.9, 3.10, 3.11, 3.12, 3.13
+- **Django**: 4.2, 5.0, 5.1, 5.2
 
-## Is this package right for you?
+## Why django-nextjs?
 
 django-nextjs is designed for projects
 that need both Django pages (usually rendered by Django templates) and Next.js pages. Some scenarios:
@@ -23,19 +28,19 @@ that need both Django pages (usually rendered by Django templates) and Next.js p
 
 If this sounds like you, **this package is the perfect fit**. ✅
 
-However, if you’re starting a new project and intend to use Django purely as an API backend with Next.js as a standalone frontend, you **don’t need** this package.
+However, if you’re starting a new project and intend to use Django purely as an API backend with Next.js as a standalone frontend, you don’t need this package.
 Simply run both servers and configure your public web server to route requests to Next.js; this provides a more straightforward setup.
 
-## How does it work?
 
-When a user opens a page, Django receives the initial request, queries the Next.js server for the HTML response, and returns it to the user.
+
+## How it works
+
+**django-nextjs** creates a seamless bridge between Django and Next.js. When a user opens a page, Django receives the initial request, queries the Next.js server for the HTML response, and returns it to the user.
 After opening a Next.js page, the user can navigate to other Next.js pages without any additional requests to Django (the Next.js server handles the routing).
 
-This is what it looks like in production:
+In development, Django also acts as the reverse proxy, simplifying the setup and eliminating the need for Nginx during development.
 
 ![How it works in production](.github/assets/how-it-works-production.webp)
-
-In development, to simplify the setup and remove the need for a reverse proxy like Nginx, Django also acts as the reverse proxy for Next.js client-side requests.
 
 ## Getting started
 
@@ -45,7 +50,14 @@ Install the latest version from PyPI:
 pip install django-nextjs
 ```
 
-Add `django_nextjs` to `INSTALLED_APPS`.
+Add `django_nextjs` to `INSTALLED_APPS` in your Django settings:
+
+```python
+INSTALLED_APPS = [
+    ...
+    "django_nextjs",
+]
+```
 
 Configure your project's `asgi.py` with `NextJsMiddleware` as shown below:
 
@@ -135,9 +147,9 @@ location /next/ {
 
 ## Usage
 
-Start the Next.js server using `npm run dev` or `npm run start` (depending on the environment).
+Start the Next.js server using `npm run dev` (development) or `npm run start` (production).
 
-For each Next.js page, define a Django URL that will render the page using the `nextjs_page` view.
+Define Django URLs for your Next.js pages:
 
 ```python
 from django_nextjs.views import nextjs_page
@@ -145,7 +157,7 @@ from django_nextjs.views import nextjs_page
 urlpatterns = [
     path("/my/page", nextjs_page(), name="my_page"),
 
-    # To enable streaming, set stream=True (recommended)
+    # With App Router streaming (recommended)
     path("/other/page", nextjs_page(stream=True), name="other_page"),
 ]
 ```
@@ -230,17 +242,17 @@ urlpatterns = [
 
 ## Notes
 
-- If you want to add a file to the Next.js `public` directory,
-  that file should be in the `public/next` subdirectory for it to work correctly.
-- If you're using ASGI, make sure all your middlewares are
-  [async-capable](https://docs.djangoproject.com/en/dev/topics/http/middleware/#asynchronous-support).
-- To avoid "Too many redirects" errors, you may need to add `APPEND_SLASH = False` in your Django project's `settings.py`. Also, do not add `/` at the end of Next.js paths in `urls.py`.
-- This package does not provide a solution for passing data from Django to Next.js. The Django Rest Framework, GraphQL, or similar solutions should still be used.
-- This package does not start the Next.js server. You need to run it yourself.
+- Place Next.js public files in the `public/next` subdirectory.
+- Ensure all your middlewares are [async-capable](https://docs.djangoproject.com/en/dev/topics/http/middleware/#asynchronous-support).
+- Set `APPEND_SLASH = False` in `settings.py` to avoid redirect loops, and don't add trailing slashes to Next.js paths.
+- Implement an API to pass data between Django and Next.js.
+  You can use Django REST Framework or GraphQL.
+- This package doesn't start Next.js - you'll need to run it separately.
 
 ## Settings
 
-Default settings:
+You can configure `django-nextjs` using the `NEXTJS_SETTINGS` dictionary in your Django settings file.
+The default settings are:
 
 ```python
 NEXTJS_SETTINGS = {
@@ -276,13 +288,14 @@ You should also update the production reverse proxy configuration accordingly.
 
 ## Contributing
 
-To start development:
+We welcome contributions from the community! Here's how to get started:
 
-- Install development dependencies in your virtualenv with `pip install -e '.[dev]'`
-- Install pre-commit hooks using `pre-commit install`.
+1. Install development dependencies: `pip install -e '.[dev]'`
+2. Set up pre-commit hooks: `pre-commit install`
+3. Make your changes and submit a pull request.
 
-Love django-nextjs? 🌟 Star us on GitHub to help the project grow!
+Love django-nextjs? Give a star 🌟  on GitHub to help the project grow!
 
 ## License
 
-MIT
+MIT - See [LICENSE](https://github.com/QueraTeam/django-nextjs/blob/main/LICENSE) for details.

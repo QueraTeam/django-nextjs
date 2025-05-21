@@ -4,9 +4,6 @@ from setuptools import find_packages, setup
 
 from django_nextjs import __version__
 
-with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding="UTF-8") as readme:
-    README = readme.read()
-
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
@@ -20,11 +17,21 @@ dev_requirements = [
     "isort",
 ]
 
+LONG_DESCRIPTION = """
+`django-nextjs` allows Django and Next.js pages to work together seamlessly.
+It enables you to add Next.js pages to an existing Django project
+or gradually migrate your frontend to Next.js.
+
+**For full documentation, usage examples, and advanced configuration,
+please visit the GitHub repository:**
+[django-nextjs](https://github.com/QueraTeam/django-nextjs)
+"""
+
 setup(
     name="django-nextjs",
     version=__version__,
-    description="Next.js + Django integration",
-    long_description=README,
+    description="Integrate Next.js into your Django project",
+    long_description=LONG_DESCRIPTION.strip(),
     long_description_content_type="text/markdown",
     keywords=["django", "next", "nextjs", "django-nextjs"],
     author="Quera Team",

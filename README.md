@@ -9,6 +9,24 @@
 Integrate Next.js into your Django project,
 allowing Django and Next.js pages to work together seamlessly.
 
+## Table of Contents
+
+- [Compatibility](#compatibility)
+- [Why django-nextjs?](#why-django-nextjs)
+- [How it works](#how-it-works)
+- [Getting started](#getting-started)
+- [Setup Next.js URLs in production](#setup-nextjs-urls-in-production)
+- [Usage](#usage)
+  - [The `stream` parameter](#the-stream-parameter)
+- [Customizing the HTML response](#customizing-the-html-response)
+- [Notes](#notes)
+- [Settings](#settings)
+  - [`nextjs_server_url`](#nextjs_server_url)
+  - [`ensure_csrf_token`](#ensure_csrf_token)
+  - [`public_subdirectory`](#public_subdirectory)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Compatibility
 
 - **Python**: 3.9, 3.10, 3.11, 3.12, 3.13

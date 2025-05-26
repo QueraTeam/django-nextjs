@@ -9,11 +9,17 @@
 Integrate Next.js into your Django project,
 allowing Django and Next.js pages to work together seamlessly.
 
-## Table of Contents
+**django-nextjs** creates a seamless bridge between Django and Next.js. When a user opens a page, Django receives the initial request, queries the Next.js server for the HTML response, and returns it to the user.
+After opening a Next.js page, the user can navigate to other Next.js pages without any additional requests to Django (the Next.js server handles the routing).
+
+In development, Django also acts as the reverse proxy, simplifying the setup and eliminating the need for Nginx during development.
+
+![How it works in production](.github/assets/how-it-works-production.webp)
+
+## Table of contents
 
 - [Compatibility](#compatibility)
 - [Why django-nextjs?](#why-django-nextjs)
-- [How it works](#how-it-works)
 - [Getting started](#getting-started)
 - [Setup Next.js URLs in production](#setup-nextjs-urls-in-production)
 - [Usage](#usage)
@@ -44,15 +50,6 @@ If this sounds like you, **this package is the perfect fit**. ✅
 
 However, if you’re starting a new project and intend to use Django purely as an API backend with Next.js as a standalone frontend, you don’t need this package.
 Simply run both servers and configure your public web server to route requests to Next.js; this provides a more straightforward setup.
-
-## How it works
-
-**django-nextjs** creates a seamless bridge between Django and Next.js. When a user opens a page, Django receives the initial request, queries the Next.js server for the HTML response, and returns it to the user.
-After opening a Next.js page, the user can navigate to other Next.js pages without any additional requests to Django (the Next.js server handles the routing).
-
-In development, Django also acts as the reverse proxy, simplifying the setup and eliminating the need for Nginx during development.
-
-![How it works in production](.github/assets/how-it-works-production.webp)
 
 ## Getting started
 

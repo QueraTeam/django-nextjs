@@ -6,15 +6,13 @@
 [![License: MIT](https://img.shields.io/github/license/QueraTeam/django-nextjs.svg)](https://github.com/QueraTeam/django-nextjs/blob/master/LICENSE)
 [![Code style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Integrate Next.js into your Django project,
-allowing Django and Next.js pages to work together seamlessly.
+**django-nextjs** allows Django and Next.js pages to work together seamlessly.
+When a user opens a Next.js page, Django receives the initial request, queries the Next.js server for the HTML response, and returns it to the user.
+After opening a Next.js page, the user can navigate to other Next.js pages without any additional requests to Django, since Next.js internals (`/_next/*`, `/__next/*`) are handled directly by Next.js.
 
-**django-nextjs** creates a seamless bridge between Django and Next.js. When a user opens a page, Django receives the initial request, queries the Next.js server for the HTML response, and returns it to the user.
-After opening a Next.js page, the user can navigate to other Next.js pages without any additional requests to Django (the Next.js server handles the routing).
+![How it works in production](.github/assets/how-it-works-production.svg)
 
-In development, Django also acts as the reverse proxy, simplifying the setup and eliminating the need for Nginx during development.
-
-![How it works in production](.github/assets/how-it-works-production.webp)
+To simplify the setup and eliminate the need for Nginx during development, django-nextjs also acts as the reverse proxy for Next.js internals when Django's `DEBUG` setting is `True`.
 
 ## Table of contents
 
@@ -46,7 +44,12 @@ that need both Django pages (usually rendered by Django templates) and Next.js p
 - You want to add some Next.js pages to an existing Django project.
 - You want to migrate your frontend to Next.js, but since the project is large, you want to do it gradually.
 
-If this sounds like you, **this package is the perfect fit**. ✅
+If this sounds like you, **this package is the perfect fit**.
+This package improves the development experience
+by allowing everything to be accessible from a single port
+without needing a reverse proxy,
+while ensuring all Next.js features like fast refresh continue to work.
+It also helps in production by eliminating the need to maintain a list of Next.js page paths in the reverse proxy configuration.
 
 However, if you’re starting a new project and intend to use Django purely as an API backend with Next.js as a standalone frontend, you don’t need this package.
 Simply run both servers and configure your public web server to route requests to Next.js; this provides a more straightforward setup.

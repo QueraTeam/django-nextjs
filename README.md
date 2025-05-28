@@ -8,11 +8,11 @@
 
 **django-nextjs** allows Django and Next.js pages to work together seamlessly.
 When a user opens a Next.js page, Django receives the initial request, queries the Next.js server for the HTML response, and returns it to the user.
-After opening a Next.js page, the user can navigate to other Next.js pages without any additional requests to Django, since Next.js internals (`/_next/*`, `/__next/*`) are handled directly by Next.js.
+After opening a Next.js page, the user can navigate to other Next.js pages without any additional requests to Django, since Next.js internal paths (`/_next/...`) are handled directly by Next.js.
 
 ![How it works in production](.github/assets/how-it-works-production.svg)
 
-To simplify the setup and eliminate the need for Nginx during development, django-nextjs also acts as the reverse proxy for Next.js internals when Django's `DEBUG` setting is `True`.
+To simplify the setup and eliminate the need for a reverse proxy like Nginx during development, django-nextjs also acts as the reverse proxy for Next.js internal paths when Django's `DEBUG` setting is `True`.
 
 ## Table of contents
 

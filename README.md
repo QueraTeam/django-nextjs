@@ -133,18 +133,12 @@ In production, use a reverse proxy like Nginx or Caddy.
 
 | URL                 | Action                                                      |
 |---------------------|-------------------------------------------------------------|
-| `/_next/static/...` | Serve `NEXTJS_PATH/.next/static` directory                  |
 | `/_next/...`        | Proxy to the Next.js server (e.g., `http://127.0.0.1:3000`) |
 | `/next/...`         | Serve `NEXTJS_PATH/public/next` directory                   |
 
 Example Nginx configuration:
 
 ```conf
-location /_next/static/ {
-    alias NEXTJS_PATH/.next/static/;
-    expires max;
-    add_header Cache-Control "public";
-}
 location /_next/ {
     proxy_pass  http://127.0.0.1:3000;
     proxy_set_header Host $http_host;
@@ -154,8 +148,7 @@ location /_next/ {
 }
 location /next/ {
     alias NEXTJS_PATH/public/next/;
-    expires max;
-    add_header Cache-Control "public";
+    add_header Cache-Control "public, max-age=0";
 }
 ```
 

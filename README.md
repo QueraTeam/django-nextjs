@@ -150,6 +150,11 @@ location /next/ {
     alias NEXTJS_PATH/public/next/;
     add_header Cache-Control "public, max-age=0";
 }
+# You can optionally serve "/_next/static" directly by nginx.
+# location /_next/static/ {
+#     alias NEXTJS_PATH/.next/static/;
+#     add_header Cache-Control "public, max-age=31536000, immutable";
+# }
 ```
 
 ## Usage

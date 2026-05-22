@@ -4,7 +4,7 @@ exclude: ".excalidraw$"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v5.0.0"
+    rev: "v6.0.0"
     hooks:
       - id: trailing-whitespace # trims trailing whitespace
         args: [--markdown-linebreak-ext=md]
@@ -12,35 +12,33 @@ repos:
       - id: check-yaml # checks syntax of yaml files
       - id: check-json # checks syntax of json files
       - id: check-added-large-files # prevent giant files from being committed
-      - id: fix-encoding-pragma # removes "# -*- coding: utf-8 -*-" from python files (since we only support python 3)
-        args: [--remove]
       - id: check-merge-conflict # check for files that contain merge conflict strings
 
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: "1.25.0"
+    rev: "1.30.0"
     hooks:
       - id: django-upgrade
         args: [--target-version, "4.2"]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: "v3.19.1"
+    rev: "v3.21.2"
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
 
   - repo: https://github.com/pycqa/isort
-    rev: "6.0.1"
+    rev: "9.0.0a3"
     hooks:
       - id: isort
         name: isort (python)
 
   - repo: https://github.com/psf/black
-    rev: "25.1.0"
+    rev: "26.5.1"
     hooks:
       - id: black
 
   - repo: https://github.com/ikamensh/flynt
-    rev: "1.0.1"
+    rev: "1.0.6"
     hooks:
       - id: flynt
         args: [--aggressive, --line-length, "120"]

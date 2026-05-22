@@ -22,13 +22,8 @@ def test_get_render_context_html_with_empty_sections():
 
 
 def test_get_render_context_html_with_incomplete_sections():
-    assert (
-        _get_render_context(
-            """<html><head></head><body><div id="__django_nextjs_body_begin"/>
-            <div id="__django_nextjs_body_end"/></body></html>"""
-        )
-        is None
-    )
+    assert _get_render_context("""<html><head></head><body><div id="__django_nextjs_body_begin"/>
+            <div id="__django_nextjs_body_end"/></body></html>""") is None
 
 
 def test_get_render_context_html_with_sections_and_content():

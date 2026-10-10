@@ -151,6 +151,8 @@ class NextJsWebSocketProxy(NextJsProxyBase):
 
     async def connect(self):
         nextjs_websocket_url = f"ws://{urlparse(NEXTJS_SERVER_URL).netloc}{self.scope['path']}"
+        if query_string := self.scope.get("query_string"):
+            nextjs_websocket_url += "?" + query_string.decode()
         try:
             self.nextjs_connection = await websockets.connect(nextjs_websocket_url)
         except:

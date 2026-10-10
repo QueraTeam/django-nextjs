@@ -1,11 +1,12 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from django.test import RequestFactory
+from django.test import AsyncRequestFactory, RequestFactory
 from django.utils.datastructures import MultiValueDict
 
 from django_nextjs.app_settings import NEXTJS_SERVER_URL
-from django_nextjs.render import _get_render_context, render_nextjs_page_to_string
+from django_nextjs.asgi import NextJsMiddleware
+from django_nextjs.render import _get_nextjs_request_headers, _get_render_context, render_nextjs_page_to_string
 from django_nextjs.views import nextjs_page
 
 
@@ -41,6 +42,57 @@ def test_get_render_context_html_with_sections_and_content():
 
     context = {"extra_context": "content"}
     assert _get_render_context(html, context) == {**expected_context, **context}
+
+
+@pytest.mark.parametrize("headers", [None, {"X-Nextjs-Request-Id": "custom-request-id"}])
+def test_nextjs_request_headers_preserve_debug_identifiers(rf: RequestFactory, headers):
+    request = rf.get(
+        "/example",
+        HTTP_X_NEXTJS_REQUEST_ID="request-id",
+        HTTP_X_NEXTJS_HTML_REQUEST_ID="document-id",
+    )
+
+    forwarded = _get_nextjs_request_headers(request, headers=headers)
+
+    assert forwarded.get("X-Nextjs-Request-Id") == ("custom-request-id" if headers else "request-id")
+    assert forwarded.get("X-Nextjs-Html-Request-Id") == "document-id"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("stream", [False, True])
+async def test_nextjs_page_forwards_debug_identifiers(stream):
+    request = AsyncRequestFactory().get(
+        "/example",
+        headers={"X-Nextjs-Request-Id": "request-id", "X-Nextjs-Html-Request-Id": "document-id"},
+    )
+    response = MagicMock(status=200, headers={})
+    response.text = AsyncMock(return_value="<html></html>")
+    session = MagicMock()
+
+    async def response_chunks():
+        yield b"<html></html>"
+
+    if stream:
+        session.get = AsyncMock(return_value=response)
+        response.content.iter_any = response_chunks
+        response.release = AsyncMock()
+        request.scope["state"] = {NextJsMiddleware.HTTP_SESSION_KEY: session}
+    else:
+        session.get.return_value.__aenter__.return_value = response
+
+    with patch("django_nextjs.render.aiohttp.ClientSession") as client_session:
+        client_session.return_value.__aenter__ = AsyncMock(return_value=session)
+
+        http_response = await nextjs_page(stream=stream)(request)
+        if stream:
+            assert b"".join([chunk async for chunk in http_response.streaming_content]) == b"<html></html>"
+            forwarded = session.get.call_args.kwargs["headers"]
+        else:
+            assert http_response.content == b"<html></html>"
+            forwarded = client_session.call_args.kwargs["headers"]
+
+    assert forwarded.get("X-Nextjs-Request-Id") == "request-id"
+    assert forwarded.get("X-Nextjs-Html-Request-Id") == "document-id"
 
 
 @pytest.mark.asyncio

@@ -59,6 +59,8 @@ def _get_nextjs_request_headers(request: HttpRequest, headers: Optional[dict] = 
             "Next-Router-State-Tree",
             "Next-Router-Prefetch",
             "Next-Url",
+            "X-Nextjs-Request-Id",
+            "X-Nextjs-Html-Request-Id",
             "Cookie",
             "Accept-Encoding",
         ],
